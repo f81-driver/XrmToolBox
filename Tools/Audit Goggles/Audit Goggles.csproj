@@ -261,6 +261,7 @@
     <Compile Include="Helpers\FetchXmlHelper.cs" />
     <Compile Include="Mocks\AuditEntityItemsControlItemsSource.cs" />
     <Compile Include="Mocks\ColorTestItemsSource.cs" />
+    <Compile Include="Mocks\EntityAuditCriteriaWindowMocks.cs" />
     <Compile Include="Mocks\EntityAuditFilterOperationListBoxItemsSource.cs" />
     <Compile Include="Mocks\EntityAuditListViewItemsSource.cs" />
     <Compile Include="Mocks\AuditRecordItemsControlItemsSource.cs" />
@@ -283,6 +284,9 @@
     </Compile>
     <Compile Include="Windows\AuditRecordInputWindow.xaml.cs">
       <DependentUpon>AuditRecordInputWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Windows\EntityAuditColumnsWindow.xaml.cs">
+      <DependentUpon>EntityAuditColumnsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Windows\EntityAuditCriteriaWindow.xaml.cs">
       <DependentUpon>EntityAuditCriteriaWindow.xaml</DependentUpon>
@@ -311,6 +315,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Windows\AuditRecordInputWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Windows\EntityAuditColumnsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

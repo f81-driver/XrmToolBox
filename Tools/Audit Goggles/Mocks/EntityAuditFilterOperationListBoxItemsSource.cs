@@ -9,22 +9,22 @@ using System.Reflection;
 
 namespace Formula81.XrmToolBox.Tools.AuditGoggles.Mocks
 {
-    internal class EntityAuditFilterOperationListBoxItemsSource :IEnumerable<SelectableEnumItem>
+    internal class EntityAuditFilterOperationListBoxItemsSource : IEnumerable<CheckableEnumItem>
     {
-        private readonly ReadOnlyCollection<SelectableEnumItem> _auditOperationItemCollection;
+        private readonly ReadOnlyCollection<CheckableEnumItem> _auditOperationItemCollection;
 
         public EntityAuditFilterOperationListBoxItemsSource()
         {
             var auditOperationType = typeof(Audit_Operation);
             _auditOperationItemCollection = Enum.GetValues(auditOperationType)
                 .Cast<Audit_Operation>()
-                .Select(ao => new SelectableEnumItem((int)ao, auditOperationType.GetField(ao.ToString())
+                .Select(ao => new CheckableEnumItem((int)ao, auditOperationType.GetField(ao.ToString())
                     .GetCustomAttribute<OptionSetMetadataAttribute>()?.Name))
                 .ToList()
                 .AsReadOnly();
         }
 
-        public IEnumerator<SelectableEnumItem> GetEnumerator()
+        public IEnumerator<CheckableEnumItem> GetEnumerator()
         {
             return _auditOperationItemCollection.GetEnumerator();
         }

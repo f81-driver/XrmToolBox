@@ -6,6 +6,7 @@ using Formula81.XrmToolBox.Libraries.Xrm.Caches;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Caches;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Helpers;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Models;
+using Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Views;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Windows;
 using Microsoft.Xrm.Sdk;
@@ -28,8 +29,10 @@ using F81Rect = Formula81.XrmToolBox.Libraries.Parts.Components.Rect;
 
 namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
 {
-    public partial class AuditGogglesPluginControl : PluginControlBase, IPayPalPlugin, IMessageBusHost
+    public partial class AuditGogglesPluginControl : PluginControlBase, IMessageBusHost, IGitHubPlugin, IPayPalPlugin
     {
+        private const string GitHubRepositoryName = "XrmToolBox";
+        private const string GitHubUserName = "f81-driver";
         private const string FetchXmlBuilderSourcePluginName = "FetchXML Builder";
 
         public event EventHandler<MessageBusEventArgs> OnOutgoingMessage;
@@ -44,6 +47,9 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
 
         public string DonationDescription => "";
         public string EmailAccount => "";
+
+        public string RepositoryName => GitHubRepositoryName;
+        public string UserName => GitHubUserName;
 
         public AuditGogglesPluginControl()
         {
@@ -136,6 +142,26 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
             };
 
             return window.ShowDialog() ?? false ? window.Criteria.ToList() : criteriaConditions;
+        }
+
+        internal IDictionary<string, ColumnSet> ShowEntityAuditColumnsDialog(IDictionary<string, ColumnSet> columns)
+        {
+            var window = new EntityAuditColumnsWindow()
+            {
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+            var center = WindowUtility.CalculateCenter(window.Width, window.Height, GetWindowBounds());
+            window.Left = center.X;
+            window.Top = center.Y;
+            _ = new WindowInteropHelper(window)
+            {
+                Owner = Handle
+            };
+            var entityMetadatas = ServiceClient.GetAllEntityMetadata()
+                .Where(em => columns.ContainsKey(em.LogicalName));
+            window.SetSource(entityMetadatas, columns);
+
+            return window.ShowDialog() ?? false ? window.Get() : columns;
         }
 
         internal void LoadAuditEntitiesAsync()
@@ -260,7 +286,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
             });
         }
 
-        internal void LoadEntityAuditsAsync(IEnumerable<ConditionExpression> criteriaConditions = null)
+        internal void LoadEntityAuditsAsync(IEnumerable<ConditionExpression> criteriaConditions, IDictionary<string, ColumnSet> columns)
         {
             const string message = "Loading Entity Audits";
             if (!(ServiceClient?.IsReady ?? false))
@@ -274,7 +300,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
                 Message = message,
                 Work = (backgroundWorker, doWorkEventArgs) =>
                 {
-                    var cc = auditRecords.ToDictionary(ar => ar.Id, ar => ar.ColorCombination);
+                    var colorCombos = auditRecords.ToDictionary(ar => ar.Id, ar => ar.ColorCombination);
                     var auditList = new List<Audit>();
 
                     var data = new Dictionary<string, Dictionary<Guid, Entity>>();
@@ -295,9 +321,9 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
                         }
                     }
                     var entityAuditHelper = new EntityAuditHelper(ServiceClient);
-                    var entityAudits = auditList.Select(a => entityAuditHelper.ParseAudit(a, data[a.ObjectId.LogicalName][a.ObjectId.Id], entityMetadatas[a.ObjectId.LogicalName], cc[a.ObjectId.Id]));
+                    var entityAudits = auditList.Select(a => entityAuditHelper.ParseAudit(a, data[a.ObjectId.LogicalName][a.ObjectId.Id], entityMetadatas[a.ObjectId.LogicalName], columns[a.ObjectId.LogicalName], colorCombos[a.ObjectId.Id]));
                     var defaultEntityAudits = auditRecordGroups.Where(g => !(entityMetadatas[g.Key]?.IsAuditEnabled?.Value ?? false))
-                            .SelectMany(g => g.SelectMany(i => entityAuditHelper.GetDefaultEntityAudits(data[g.Key][i], entityMetadatas[g.Key], cc[i])
+                            .SelectMany(g => g.SelectMany(i => entityAuditHelper.GetDefaultEntityAudits(data[g.Key][i], entityMetadatas[g.Key], colorCombos[i])
                                 .Where(ea => EntityAuditHelper.CheckChangedDate(ea, criteriaConditions))));
 
                     doWorkEventArgs.Result = entityAudits.Where(ea => ea != null)

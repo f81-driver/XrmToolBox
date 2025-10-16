@@ -1,0 +1,55 @@
+﻿<Window x:Class="Formula81.XrmToolBox.Tools.AuditGoggles.Windows.EntityAuditColumnsWindow"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Formula81.XrmToolBox.Tools.AuditGoggles.Windows"
+             xmlns:localmocks="clr-namespace:Formula81.XrmToolBox.Tools.AuditGoggles.Mocks"
+             mc:Ignorable="d" Height="300" Width="500"
+             Title="Entity Audit Columns">
+    <Window.Resources>
+        <Style TargetType="Label">
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+    </Window.Resources>
+    <DockPanel Margin="5">
+        <StackPanel DockPanel.Dock="Bottom" Margin="0,2,0,0"
+                    HorizontalAlignment="Right" Orientation="Horizontal">
+            <Button x:Name="SubmitButton" Content="Ok" Width="100" IsDefault="True" />
+            <Button x:Name="CancelButton" Content="Cancel" Width="100" Margin="2,0,0,0" IsCancel="True" />
+        </StackPanel>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="40*" />
+                <ColumnDefinition Width="60*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <ListBox x:Name="AuditEntityListBox" Grid.RowSpan="2"
+                     HorizontalContentAlignment="Stretch">
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="local:EntityAuditColumnsItem">
+                        <Grid>
+                            <Grid.ColumnDefinitions >
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding DisplayName}" />
+                            <TextBlock Grid.Column="2" Text="{Binding ColumnCount}" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+                <d:ListBox.ItemsSource>
+                    <localmocks:EntityAuditCriteriaWindowAuditEntityListBoxItemsSource />
+                </d:ListBox.ItemsSource>
+            </ListBox>
+            <WrapPanel Grid.Column="1" Margin="2,0,0,0">
+                <CheckBox VerticalAlignment="Center" />
+                <Label Content="All columns" />
+            </WrapPanel>
+            <ListBox x:Name="AuditEntityColumnsListBox" Grid.Column="1" Grid.Row="1" Margin="2,0,0,0" />
+        </Grid>
+    </DockPanel>
+</Window>

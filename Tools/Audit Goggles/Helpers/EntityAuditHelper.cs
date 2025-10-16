@@ -35,14 +35,14 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
             _serviceClient = serviceClient;
         }
 
-        internal EntityAudit ParseAudit(Audit audit, Entity entity, EntityMetadata entityMetadata, ColorCombination colorCombination)
+        internal EntityAudit ParseAudit(Audit audit, Entity entity, EntityMetadata entityMetadata, ColumnSet columns, ColorCombination colorCombination)
         {
             switch (audit.Operation)
             {
                 case Audit_Operation.Create:
                 case Audit_Operation.Update:
                     //case Audit_Operation.Upsert:
-                    return CreateEntityAudit(audit, entity, entityMetadata, colorCombination);
+                    return CreateEntityAudit(audit, entity, entityMetadata, columns, colorCombination);
             }
             return null;
         }
@@ -79,14 +79,15 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
                 : null;
         }
 
-        private EntityAudit CreateEntityAudit(Audit audit, Entity entity, EntityMetadata entityMetadata, ColorCombination colorCombination)
+        private EntityAudit CreateEntityAudit(Audit audit, Entity entity, EntityMetadata entityMetadata, ColumnSet columns, ColorCombination colorCombination)
         {
             var attributeNumbers = audit.AttributeMask?.Split(',').Select(a => int.TryParse(a, out int columnNumber) ? (int?)columnNumber : null)
                 .Where(a => a.HasValue)
                 .Select(a => a.Value)
                     ?? Enumerable.Empty<int>();
             var changeData = JObject.Parse(audit.ChangeData);
-            var attributes = entityMetadata.Attributes.Where(am => am.ColumnNumber.HasValue)
+            var attributes = entityMetadata.Attributes.Where(am => am.ColumnNumber.HasValue
+                                && (columns.AllColumns || columns.Columns.Contains(am.LogicalName)))
                             .ToDictionary(am => am.ColumnNumber.Value);
 
             return audit.CreatedOn.HasValue ?

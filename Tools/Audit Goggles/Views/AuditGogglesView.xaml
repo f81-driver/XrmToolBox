@@ -217,21 +217,19 @@
                         </WrapPanel>
                     </Button>
                     <Separator />
-                    <Grid>
-                        <Button x:Name="EditEntityAuditFiltersButton">
-                            <WrapPanel>
-                                <Image Source="/Formula81.XrmToolBox.Tools.AuditGoggles;component/Resources/Images/filter.png" Width="24" />
-                                <Label Content="Edit Filters" />
-                            </WrapPanel>
-                        </Button>
-                        <Border Width="18" Height="18" Background="Red" CornerRadius="9" Margin="0,-5,-5,0"
-                                HorizontalAlignment="Right"  VerticalAlignment="Top" 
-                                Visibility="{Binding HasFilters, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <TextBlock Foreground="White" FontWeight="Bold" FontSize="11" 
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       Text="{Binding FilterCount}" />
-                        </Border>
-                    </Grid>
+                    <Button x:Name="EditEntityAuditFiltersButton">
+                        <WrapPanel>
+                            <Image Source="/Formula81.XrmToolBox.Tools.AuditGoggles;component/Resources/Images/filter.png" Width="24" />
+                            <Label Content="Edit Filters" />
+                            <Border Width="18" Height="18" Background="Red" CornerRadius="9" Margin="0,-5,-5,0"
+                                        HorizontalAlignment="Right"  VerticalAlignment="Top" 
+                                        Visibility="{Binding HasFilters, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <TextBlock Foreground="White" FontWeight="Bold" FontSize="11" 
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Text="{Binding FilterCount}" />
+                            </Border>
+                        </WrapPanel>
+                    </Button>
                     <Button x:Name="EditEntityAuditColumnsButton">
                         <WrapPanel>
                             <Image Source="/Formula81.XrmToolBox.Tools.AuditGoggles;component/Resources/Images/columns.png" Width="24" />

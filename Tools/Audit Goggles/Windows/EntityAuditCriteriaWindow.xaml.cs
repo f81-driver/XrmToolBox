@@ -19,8 +19,8 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Windows
 
             InitializeComponent();
 
-            OperationListBox.ItemsSource = SelectableEnumItem.ConvertEnum<Audit_Operation, OptionSetMetadataAttribute>(osma => osma.Name);
-            ActionListBox.ItemsSource = SelectableEnumItem.ConvertEnum<Audit_Action, OptionSetMetadataAttribute>(osma => osma.Name);
+            OperationListBox.ItemsSource = CheckableEnumItem.ConvertEnum<Audit_Operation, OptionSetMetadataAttribute>(osma => osma.Name);
+            ActionListBox.ItemsSource = CheckableEnumItem.ConvertEnum<Audit_Action, OptionSetMetadataAttribute>(osma => osma.Name);
 
             SubmitButton.Command = new RelayCommand(ExecuteSubmit, CanExecuteSubmit);
             CancelButton.Command = new RelayCommand(ExecuteCancel, CanExecuteCancel);
@@ -59,14 +59,14 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Windows
             ChangedDateToTimePicker.Hour = DateTime.Now.Hour;
             ChangedDateToTimePicker.Minute = DateTime.Now.Minute;
             OperationCheckBox.IsChecked = false;
-            foreach (var operationItem in OperationListBox.Items.OfType<SelectableEnumItem>())
+            foreach (var operationItem in OperationListBox.Items.OfType<CheckableEnumItem>())
             {
-                operationItem.IsSelected = false;
+                operationItem.IsChecked = false;
             }
             ActionCheckBox.IsChecked = false;
-            foreach (var actionItem in ActionListBox.Items.OfType<SelectableEnumItem>())
+            foreach (var actionItem in ActionListBox.Items.OfType<CheckableEnumItem>())
             {
-                actionItem.IsSelected = false;
+                actionItem.IsChecked = false;
             }
         }
 
@@ -90,8 +90,8 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Windows
 
             if (OperationCheckBox.IsChecked ?? false)
             {
-                var operations = OperationListBox.Items?.OfType<SelectableEnumItem>()
-                    .Where(sei => sei.IsSelected);
+                var operations = OperationListBox.Items?.OfType<CheckableEnumItem>()
+                    .Where(sei => sei.IsChecked);
                 if (operations.Any())
                 {
                     yield return new ConditionExpression(Audit.ColumnNames.Operation, ConditionOperator.In, operations.Select(o => o.EnumValue).ToArray());
@@ -99,8 +99,8 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Windows
             }
             if (ActionCheckBox.IsChecked ?? false)
             {
-                var actions = ActionListBox.Items.OfType<SelectableEnumItem>()
-                    .Where(sei => sei.IsSelected);
+                var actions = ActionListBox.Items.OfType<CheckableEnumItem>()
+                    .Where(sei => sei.IsChecked);
                 if (actions.Any())
                 {
                     yield return new ConditionExpression(Audit.ColumnNames.Action, ConditionOperator.In, actions.Select(a => a.EnumValue).ToArray());
@@ -140,23 +140,25 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Windows
                     }
                     else if (condition.AttributeName.Equals(Audit.ColumnNames.Operation))
                     {
+                        OperationCheckBox.IsChecked = true;
                         foreach (var operationValue in condition.Values.OfType<int>())
                         {
-                            var operationItem = OperationListBox.Items.OfType<SelectableEnumItem>().FirstOrDefault(sei => sei.EnumValue == operationValue);
+                            var operationItem = OperationListBox.Items.OfType<CheckableEnumItem>().FirstOrDefault(sei => sei.EnumValue == operationValue);
                             if (operationItem != null)
                             {
-                                operationItem.IsSelected = true;
+                                operationItem.IsChecked = true;
                             }
                         }
                     }
                     else if (condition.AttributeName.Equals(Audit.ColumnNames.Action))
                     {
+                        ActionCheckBox.IsChecked = true;
                         foreach (var actionValue in condition.Values.OfType<int>())
                         {
-                            var actionItem = ActionListBox.Items.OfType<SelectableEnumItem>().FirstOrDefault(sei => sei.EnumValue == actionValue);
+                            var actionItem = ActionListBox.Items.OfType<CheckableEnumItem>().FirstOrDefault(sei => sei.EnumValue == actionValue);
                             if (actionItem != null)
                             {
-                                actionItem.IsSelected = true;
+                                actionItem.IsChecked = true;
                             }
                         }
                     }

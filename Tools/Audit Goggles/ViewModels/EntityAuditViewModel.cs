@@ -26,8 +26,15 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         private int _filterCount;
         public int FilterCount { get => _filterCount; private set => SetValue(nameof(FilterCount), value, ref _filterCount); }
 
+        private bool _hasColumns;
+        public bool HasColumns { get => _hasColumns; private set => SetValue(nameof(HasColumns), value, ref _hasColumns); }
+
+        private int _columnCount;
+        public int ColumnCount { get => _columnCount; private set => SetValue(nameof(ColumnCount), value, ref _columnCount); }
+
         private List<EntityAudit> _entityAudits;
         private IEnumerable<ConditionExpression> _criteriaConditions;
+        private IDictionary<string, ColumnSet> _columns;
 
         public ICommand LoadCommand { get; }
         public ICommand EditFilters { get; }
@@ -62,7 +69,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         {
             try
             {
-                _auditGogglesPluginControl.LoadEntityAuditsAsync(_criteriaConditions);
+                _auditGogglesPluginControl.LoadEntityAuditsAsync(_criteriaConditions, _columns);
             }
             catch (Exception exception)
             {
@@ -88,6 +95,9 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         {
             try
             {
+                _columns = _auditGogglesPluginControl.ShowEntityAuditColumnsDialog(_columns);
+                ColumnCount = _criteriaConditions?.Count() ?? 0;
+                HasFilters = FilterCount > 0;
             }
             catch (Exception exception)
             {

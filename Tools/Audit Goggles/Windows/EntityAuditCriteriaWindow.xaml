@@ -19,10 +19,10 @@
         <Style TargetType="ListBox" x:Key="SelectableEnumItemListBox">
             <Setter Property="ItemTemplate">
                 <Setter.Value>
-                    <DataTemplate DataType="{x:Type f81partscomponents:SelectableEnumItem}">
+                    <DataTemplate DataType="{x:Type f81partscomponents:CheckableEnumItem}">
                         <WrapPanel>
-                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" />
-                            <TextBlock Text="{Binding DisplayName}" />
+                            <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}" />
+                            <TextBlock Text="{Binding DisplayName}" Margin="2,0,0,0" />
                         </WrapPanel>
                     </DataTemplate>
                 </Setter.Value>

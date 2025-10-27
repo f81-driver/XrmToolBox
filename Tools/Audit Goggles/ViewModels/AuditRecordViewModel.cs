@@ -21,6 +21,8 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         private readonly ObservableCollection<AuditRecord> _auditRecordCollection;
         private readonly HashSet<Guid> _auditRecordIdSet;
 
+        private int AuditRecordCount { get =>  _auditRecordCollection.Count; }
+
         public IEnumerable<AuditRecord> AuditRecords { get => _auditRecordCollection; }
         public bool IsEmpty { get => (_auditRecordCollection?.Count ?? 0) > 0; }
 
@@ -48,12 +50,14 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
 
         internal bool CanExecuteAdd(object parameter)
         {
-            return !_auditGogglesPluginControl.IsBusy;
+            return !_auditGogglesPluginControl.IsBusy
+                && AuditRecordCount < AuditGogglesPluginControl.AuditRecordsMax;
         }
 
         internal bool CanExecuteFxb(object parameter)
         {
-            return !_auditGogglesPluginControl.IsBusy;
+            return !_auditGogglesPluginControl.IsBusy
+                && AuditRecordCount < AuditGogglesPluginControl.AuditRecordsMax;
         }
 
         internal bool CanExecuteChangeColor(object parameter)
@@ -77,7 +81,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
                     var entityRefs = inputRefs.Where(i => !_auditRecordIdSet.Contains(i.Id));
                     if (entityRefs.Any())
                     {
-                        _auditGogglesPluginControl.LoadAuditRecordsAsync(entityRefs);
+                        _auditGogglesPluginControl.LoadAuditRecordsAsync((service) => entityRefs);
                     }
                 }
             }

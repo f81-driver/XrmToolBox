@@ -4,6 +4,7 @@ using Formula81.XrmToolBox.Libraries.Parts.Utilities;
 using Formula81.XrmToolBox.Libraries.Xrm;
 using Formula81.XrmToolBox.Libraries.Xrm.Caches;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Caches;
+using Formula81.XrmToolBox.Tools.AuditGoggles.Exceptions;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Helpers;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Models;
 using Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels;
@@ -15,6 +16,7 @@ using Microsoft.Xrm.Sdk.Query;
 using Microsoft.Xrm.Tooling.Connector;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
@@ -31,9 +33,13 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
 {
     public partial class AuditGogglesPluginControl : PluginControlBase, IMessageBusHost, IGitHubPlugin, IPayPalPlugin
     {
+        private const string ServiceClientNotAvailableMessage = "Service Client is not available";
+
         private const string GitHubRepositoryName = "XrmToolBox";
         private const string GitHubUserName = "f81-driver";
         private const string FetchXmlBuilderSourcePluginName = "FetchXML Builder";
+
+        public const int AuditRecordsMax = 100;
 
         public event EventHandler<MessageBusEventArgs> OnOutgoingMessage;
 
@@ -43,13 +49,14 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
         private readonly AuditGogglesView _auditGogglesView;
 
         public AuditGogglesSettings Settings { get; private set; }
-        public CrmServiceClient ServiceClient { get => ConnectionDetail?.ServiceClient; }
 
         public string DonationDescription => "";
         public string EmailAccount => "";
 
         public string RepositoryName => GitHubRepositoryName;
         public string UserName => GitHubUserName;
+
+        private CrmServiceClient ServiceClient { get => (ConnectionDetail?.ServiceClient?.IsReady ?? false ? ConnectionDetail.ServiceClient : null) ?? throw new InvalidOperationException(ServiceClientNotAvailableMessage); }
 
         public AuditGogglesPluginControl()
         {
@@ -92,7 +99,11 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
                 && message.TargetArgument is string fetchXml
                 && !string.IsNullOrEmpty(fetchXml))
             {
-                LoadAuditRecordsFetchXmlAsync(fetchXml);
+                //LoadAuditRecordsFetchXmlAsync(fetchXml);
+                LoadAuditRecordsAsync((service) =>
+                {
+                    return ServiceClient.RetrieveMultiple(new FetchExpression(fetchXml)).Entities.Select(e => e.ToEntityReference());
+                });
             }
         }
 
@@ -167,10 +178,6 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
         internal void LoadAuditEntitiesAsync()
         {
             const string message = "Loading Audit Entities";
-            if (!(ServiceClient?.IsReady ?? false))
-            {
-                throw new InvalidOperationException("No connection");
-            }
             IsBusy = true;
             WorkAsync(new WorkAsyncInfo
             {
@@ -209,19 +216,21 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
             });
         }
 
-        internal void LoadAuditRecordsAsync(IEnumerable<EntityReference> entityRefs)
+        internal void LoadAuditRecordsAsync(Func<CrmServiceClient, IEnumerable<EntityReference>> entityRefFunc)
         {
             const string message = "Loading Audit Records";
-            if (!(ServiceClient?.IsReady ?? false))
-            {
-                throw new InvalidOperationException("No connection");
-            }
             IsBusy = true;
+            var auditRecordCount = _auditGogglesView.AuditRecordViewModel.AuditRecords.Count();
             WorkAsync(new WorkAsyncInfo
             {
                 Message = message,
                 Work = (backgroundWorker, doWorkEventArgs) =>
                 {
+                    var entityRefs = entityRefFunc(ServiceClient);
+                    if (entityRefs.Count() + auditRecordCount > AuditRecordsMax)
+                    {
+                        throw new AuditRecordsLimitException(AuditRecordsMax);
+                    }
                     doWorkEventArgs.Result = WorkAuditRecords(entityRefs);
                 },
                 PostWorkCallBack = runWorkerCompletedEventArgs =>
@@ -247,52 +256,9 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
             });
         }
 
-        internal void LoadAuditRecordsFetchXmlAsync(string fetchXml)
-        {
-            const string message = "Loading Audit Records";
-            if (!(ServiceClient?.IsReady ?? false))
-            {
-                throw new InvalidOperationException("No connection");
-            }
-            IsBusy = true;
-            WorkAsync(new WorkAsyncInfo
-            {
-                Message = message,
-                Work = (backgroundWorker, doWorkEventArgs) =>
-                {
-                    var entityRefs = ServiceClient.RetrieveMultiple(new FetchExpression(fetchXml)).Entities.Select(e => e.ToEntityReference());
-                    doWorkEventArgs.Result = WorkAuditRecords(entityRefs);
-                },
-                PostWorkCallBack = runWorkerCompletedEventArgs =>
-                {
-                    try
-                    {
-                        runWorkerCompletedEventArgs.ThrowIfError();
-                        var results = runWorkerCompletedEventArgs.Result as IEnumerable<AuditRecord>;
-                        foreach (var r in results)
-                        {
-                            _auditGogglesView.AuditRecordViewModel.Add(r);
-                        }
-                    }
-                    catch (Exception exception)
-                    {
-                        ShowErrorDialog(exception, message);
-                    }
-                    finally
-                    {
-                        IsBusy = false;
-                    }
-                }
-            });
-        }
-
-        internal void LoadEntityAuditsAsync(IEnumerable<ConditionExpression> criteriaConditions, IDictionary<string, ColumnSet> columns)
+        internal void LoadEntityAuditsAsync(IEnumerable<ConditionExpression> criteriaConditions, IDictionary<string, ColumnSet> columns, OrderType orderType)
         {
             const string message = "Loading Entity Audits";
-            if (!(ServiceClient?.IsReady ?? false))
-            {
-                throw new InvalidOperationException("No connection");
-            }
             IsBusy = true;
             var auditRecords = _auditGogglesView.AuditRecordViewModel.AuditRecords;
             WorkAsync(new WorkAsyncInfo
@@ -317,11 +283,12 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
 
                         if (entityMetadata?.IsAuditEnabled?.Value ?? false)
                         {
-                            auditList.AddRange(RetrieveAudits(auditRecordGroup, criteriaConditions));
+                            auditList.AddRange(RetrieveAudits(auditRecordGroup, criteriaConditions, orderType));
                         }
                     }
                     var entityAuditHelper = new EntityAuditHelper(ServiceClient);
-                    var entityAudits = auditList.Select(a => entityAuditHelper.ParseAudit(a, data[a.ObjectId.LogicalName][a.ObjectId.Id], entityMetadatas[a.ObjectId.LogicalName], columns[a.ObjectId.LogicalName], colorCombos[a.ObjectId.Id]));
+                    //var entityAudits = auditList.Select(a => entityAuditHelper.ParseAudit(a, data[a.ObjectId.LogicalName][a.ObjectId.Id], entityMetadatas[a.ObjectId.LogicalName], columns[a.ObjectId.LogicalName], colorCombos[a.ObjectId.Id]));
+                    var entityAudits = auditList.Select(a => entityAuditHelper.ParseAudit(a, data[a.ObjectId.LogicalName][a.ObjectId.Id], entityMetadatas[a.ObjectId.LogicalName], new ColumnSet(true), colorCombos[a.ObjectId.Id]));
                     var defaultEntityAudits = auditRecordGroups.Where(g => !(entityMetadatas[g.Key]?.IsAuditEnabled?.Value ?? false))
                             .SelectMany(g => g.SelectMany(i => entityAuditHelper.GetDefaultEntityAudits(data[g.Key][i], entityMetadatas[g.Key], colorCombos[i])
                                 .Where(ea => EntityAuditHelper.CheckChangedDate(ea, criteriaConditions))));
@@ -408,54 +375,55 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
             return auditRecordList;
         }
 
-        private IEnumerable<Audit> RetrieveAudits(IEnumerable<Guid> objectIds, IEnumerable<ConditionExpression> criteriaConditions = null)
+        private IEnumerable<Audit> RetrieveAudits(IEnumerable<Guid> objectIds, IEnumerable<ConditionExpression> criteriaConditions, OrderType orderType)
         {
             var auditList = new List<Audit>();
             if (objectIds?.Any() ?? false)
             {
-                var objectIdQueue = new Queue<Guid>(objectIds);
-                while (objectIdQueue.Count > 0)
+                //var objectIdQueue = new Queue<Guid>(objectIds);
+                // (objectIdQueue.Count > 0)
+                //{
+                var query = new QueryExpression(Audit.EntityLogicalName)
                 {
-                    var query = new QueryExpression(Audit.EntityLogicalName)
-                    {
-                        ColumnSet = new ColumnSet(Audit.ColumnNames.AuditId,
-                            Audit.ColumnNames.Action,
-                            Audit.ColumnNames.AttributeMask,
-                            Audit.ColumnNames.ChangeData,
-                            Audit.ColumnNames.CreatedOn,
-                            Audit.ColumnNames.ObjectId,
-                            Audit.ColumnNames.ObjectTypeCode,
-                            Audit.ColumnNames.Operation,
-                            Audit.ColumnNames.UserId),
-                        Criteria =
+                    ColumnSet = new ColumnSet(Audit.ColumnNames.AuditId,
+                        Audit.ColumnNames.Action,
+                        Audit.ColumnNames.AttributeMask,
+                        Audit.ColumnNames.ChangeData,
+                        Audit.ColumnNames.CreatedOn,
+                        Audit.ColumnNames.ObjectId,
+                        Audit.ColumnNames.ObjectTypeCode,
+                        Audit.ColumnNames.Operation,
+                        Audit.ColumnNames.UserId),
+                    Criteria =
                         {
                             Conditions =
                             {
-                                new ConditionExpression(Audit.Columns.ObjectId, ConditionOperator.In, objectIdQueue.DequeueChunk(100).ToArray()),
-                                //new ConditionExpression(Audit.Columns.Action, ConditionOperator.In, EntityAuditHelper.SupportedAuditActionValues)
+                                new ConditionExpression(Audit.Columns.ObjectId, ConditionOperator.In, objectIds/*Queue.DequeueChunk(100)*/.ToArray()),
+                                new ConditionExpression(Audit.Columns.Action, ConditionOperator.In, EntityAuditHelper.SupportedAuditActionValues)
                             }
                         },
-                        PageInfo = new PagingInfo { Count = 5000, PageNumber = 1 }
-                    };
-                    if (criteriaConditions?.Any() ?? false)
+                    Orders = { new OrderExpression(Audit.ColumnNames.CreatedOn, orderType) },
+                    PageInfo = new PagingInfo { Count = 5000, PageNumber = 1 }
+                };
+                if (criteriaConditions?.Any() ?? false)
+                {
+                    query.Criteria.Conditions.AddRange(criteriaConditions);
+                }
+                while (true)
+                {
+                    var result = Service.RetrieveMultiple(query);
+                    auditList.AddRange(result.Entities.Select(e => e.ToEntity<Audit>()));
+                    if (result.MoreRecords)
                     {
-                        query.Criteria.Conditions.AddRange(criteriaConditions);
+                        query.PageInfo.PageNumber++;
+                        query.PageInfo.PagingCookie = result.PagingCookie;
                     }
-                    while (true)
+                    else
                     {
-                        var result = Service.RetrieveMultiple(query);
-                        auditList.AddRange(result.Entities.Select(e => e.ToEntity<Audit>()));
-                        if (result.MoreRecords)
-                        {
-                            query.PageInfo.PageNumber++;
-                            query.PageInfo.PagingCookie = result.PagingCookie;
-                        }
-                        else
-                        {
-                            break;
-                        }
+                        break;
                     }
                 }
+                //}
             }
             return auditList;
         }

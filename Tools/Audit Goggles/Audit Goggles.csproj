@@ -251,6 +251,7 @@
       <DependentUpon>EntityAuditValueControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Events\AuditRecordEntryViewModelEvents.cs" />
+    <Compile Include="Exceptions\AuditRecordsLimitException.cs" />
     <Compile Include="Forms\AuditGogglesPluginControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

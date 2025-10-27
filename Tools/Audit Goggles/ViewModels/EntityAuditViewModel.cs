@@ -35,6 +35,8 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         private List<EntityAudit> _entityAudits;
         private IEnumerable<ConditionExpression> _criteriaConditions;
         private IDictionary<string, ColumnSet> _columns;
+        private OrderType _orderType;
+        private PagingInfo  _pageInfo;
 
         public ICommand LoadCommand { get; }
         public ICommand EditFilters { get; }
@@ -43,6 +45,8 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         public EntityAuditViewModel(AuditGogglesPluginControl auditGogglesPluginControl)
         {
             _auditGogglesPluginControl = auditGogglesPluginControl;
+            _orderType = OrderType.Descending;
+            _pageInfo = new PagingInfo { Count = 5000, PageNumber = 1 };
 
             LoadCommand = new RelayCommand(ExecuteLoad, CanExecuteLoad);
             EditFilters = new RelayCommand(ExecuteEditFilters, CanExecuteEditFilters);
@@ -69,7 +73,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         {
             try
             {
-                _auditGogglesPluginControl.LoadEntityAuditsAsync(_criteriaConditions, _columns);
+                _auditGogglesPluginControl.LoadEntityAuditsAsync(_criteriaConditions, _columns, _orderType);
             }
             catch (Exception exception)
             {
@@ -110,12 +114,12 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
             _entityAuditsViewSource = null;
         }
 
-        internal void SortEntityAudits(string propertyName, bool descending)
+        /*internal void SortEntityAudits(string propertyName, bool descending)
         {
             _entityAuditsViewSource.SortDescriptions.Clear();
             _entityAuditsViewSource.SortDescriptions.Add(new SortDescription(propertyName, descending ? ListSortDirection.Descending : ListSortDirection.Ascending));
             _entityAuditsViewSource.Refresh();
-        }
+        }*/
 
         internal void SetSource(IEnumerable<EntityAudit> entityAudits)
         {

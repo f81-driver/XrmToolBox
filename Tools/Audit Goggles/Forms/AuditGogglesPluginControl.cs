@@ -7,7 +7,6 @@ using Formula81.XrmToolBox.Tools.AuditGoggles.Caches;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Exceptions;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Helpers;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Models;
-using Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Views;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Windows;
 using Microsoft.Xrm.Sdk;
@@ -16,7 +15,6 @@ using Microsoft.Xrm.Sdk.Query;
 using Microsoft.Xrm.Tooling.Connector;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
@@ -168,9 +166,12 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
             {
                 Owner = Handle
             };
-            var entityMetadatas = ServiceClient.GetAllEntityMetadata()
-                .Where(em => columns.ContainsKey(em.LogicalName));
-            window.SetSource(entityMetadatas, columns);
+            var entityMetadataList = new List<EntityMetadata>();
+            foreach (var entityLogicalName in _auditGogglesView.AuditRecordViewModel.AuditRecords.Select(ar => ar.EntityLogicalName).Distinct())
+            {
+                entityMetadataList.Add(ServiceClient.GetEntityMetadata(entityLogicalName, EntityFilters.Attributes));
+            }
+            window.SetSource(entityMetadataList, columns);
 
             return window.ShowDialog() ?? false ? window.Get() : columns;
         }
@@ -231,7 +232,8 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
                     {
                         throw new AuditRecordsLimitException(AuditRecordsMax);
                     }
-                    doWorkEventArgs.Result = WorkAuditRecords(entityRefs);
+                    var auditRecords = WorkAuditRecords(entityRefs);
+                    doWorkEventArgs.Result = auditRecords;
                 },
                 PostWorkCallBack = runWorkerCompletedEventArgs =>
                 {
@@ -283,12 +285,21 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
 
                         if (entityMetadata?.IsAuditEnabled?.Value ?? false)
                         {
-                            auditList.AddRange(RetrieveAudits(auditRecordGroup, criteriaConditions, orderType));
+                            var attributes = entityMetadata.Attributes.Where(am => am.ColumnNumber.HasValue)
+                                .ToDictionary(am => am.LogicalName, am => am.ColumnNumber.Value);
+                            var columnSet = (columns?.TryGetValue(entityMetadata.LogicalName, out var cs) ?? false) ? cs : null;
+                            var attributeMasks = columnSet?.Columns?.Select(c => attributes.TryGetValue(c, out var mask) ? (int?)mask : null)
+                                .Where(m => m.HasValue)
+                                .Select(m => m.Value);
+                            auditList.AddRange(RetrieveAudits(auditRecordGroup, criteriaConditions, attributeMasks, orderType));
                         }
                     }
                     var entityAuditHelper = new EntityAuditHelper(ServiceClient);
                     //var entityAudits = auditList.Select(a => entityAuditHelper.ParseAudit(a, data[a.ObjectId.LogicalName][a.ObjectId.Id], entityMetadatas[a.ObjectId.LogicalName], columns[a.ObjectId.LogicalName], colorCombos[a.ObjectId.Id]));
-                    var entityAudits = auditList.Select(a => entityAuditHelper.ParseAudit(a, data[a.ObjectId.LogicalName][a.ObjectId.Id], entityMetadatas[a.ObjectId.LogicalName], new ColumnSet(true), colorCombos[a.ObjectId.Id]));
+                    var entityAudits = auditList.Select(a => entityAuditHelper.ParseAudit(a,
+                                data[a.ObjectId.LogicalName][a.ObjectId.Id],
+                                entityMetadatas[a.ObjectId.LogicalName],
+                                colorCombos[a.ObjectId.Id]));
                     var defaultEntityAudits = auditRecordGroups.Where(g => !(entityMetadatas[g.Key]?.IsAuditEnabled?.Value ?? false))
                             .SelectMany(g => g.SelectMany(i => entityAuditHelper.GetDefaultEntityAudits(data[g.Key][i], entityMetadatas[g.Key], colorCombos[i])
                                 .Where(ea => EntityAuditHelper.CheckChangedDate(ea, criteriaConditions))));
@@ -360,12 +371,13 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
                     var entityNames = EntityNameCache.Instance.GetMany(logicalName, entityRefGroup.Select(er => er.Id));
                     var entityIconData = EntityIconCache.Instance.Get(entityMetadata);
                     var entityDisplayName = entityMetadata.DisplayName?.UserLocalizedLabel?.Label ?? entityMetadata.LogicalName;
-                    foreach (var entityRef in entityRefGroup)
+                    foreach (var entityRef in entityRefGroup
+                        .Where(er => entityNames.ContainsKey(er.Id)))
                     {
                         var id = entityRef.Id;
                         auditRecordList.Add(new AuditRecord(entityMetadata.ObjectTypeCode,
                             id,
-                            entityNames[id],
+                            (entityNames.TryGetValue(id, out var name) ? name?.NullifyEmptyString() : null) ?? id.ToString(),
                             logicalName,
                             entityDisplayName,
                             entityIconData));
@@ -375,7 +387,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
             return auditRecordList;
         }
 
-        private IEnumerable<Audit> RetrieveAudits(IEnumerable<Guid> objectIds, IEnumerable<ConditionExpression> criteriaConditions, OrderType orderType)
+        private IEnumerable<Audit> RetrieveAudits(IEnumerable<Guid> objectIds, IEnumerable<ConditionExpression> criteriaConditions, IEnumerable<int> attributeMasks, OrderType orderType)
         {
             var auditList = new List<Audit>();
             if (objectIds?.Any() ?? false)
@@ -398,8 +410,8 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
                         {
                             Conditions =
                             {
-                                new ConditionExpression(Audit.Columns.ObjectId, ConditionOperator.In, objectIds/*Queue.DequeueChunk(100)*/.ToArray()),
-                                new ConditionExpression(Audit.Columns.Action, ConditionOperator.In, EntityAuditHelper.SupportedAuditActionValues)
+                                new ConditionExpression(Audit.ColumnNames.ObjectId, ConditionOperator.In, objectIds/*Queue.DequeueChunk(100)*/.ToArray()),
+                                new ConditionExpression(Audit.ColumnNames.Action, ConditionOperator.In, EntityAuditHelper.SupportedAuditActionValues)
                             }
                         },
                     Orders = { new OrderExpression(Audit.ColumnNames.CreatedOn, orderType) },
@@ -408,6 +420,14 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
                 if (criteriaConditions?.Any() ?? false)
                 {
                     query.Criteria.Conditions.AddRange(criteriaConditions);
+                }
+                if (attributeMasks?.Any() ?? false)
+                {
+                    var attributeMaskFilter = query.Criteria.AddFilter(LogicalOperator.Or);
+                    foreach (var attributeMask in attributeMasks)
+                    {
+                        attributeMaskFilter.AddCondition(new ConditionExpression(Audit.ColumnNames.AttributeMask, ConditionOperator.Like, attributeMask));
+                    }
                 }
                 while (true)
                 {

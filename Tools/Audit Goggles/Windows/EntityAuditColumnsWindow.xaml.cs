@@ -1,54 +1,16 @@
-﻿using Formula81.XrmToolBox.Libraries.Core.Components;
-using Formula81.XrmToolBox.Libraries.Parts.Components;
+﻿using Formula81.XrmToolBox.Libraries.Parts.Input;
+using Formula81.XrmToolBox.Libraries.Xrm.Extensions.Metadata;
+using Formula81.XrmToolBox.Tools.AuditGoggles.Helpers;
+using Formula81.XrmToolBox.Tools.AuditGoggles.Models;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace Formula81.XrmToolBox.Tools.AuditGoggles.Windows
 {
-    public class EntityAuditColumnsItem : ObservableObject
-    {
-        public string Name { get; set; }
-        public string DisplayName { get; set; }
-
-        public IList<CheckableItem<string>> Columns { get; set; }
-
-        public bool AllColumns { get; set; }
-
-        private int? _columnCount;
-        public int? ColumnCount { get => _columnCount; private set => SetValue(nameof(ColumnCount), value, ref _columnCount); }
-
-        public EntityAuditColumnsItem(string name, string displayName, IEnumerable<CheckableItem<string>> columns)
-        {
-            Name = name;
-            DisplayName = displayName;
-            Columns = columns.ToList();
-            foreach (var column in Columns)
-            {
-                column.PropertyChanged += Column_PropertyChanged;
-            }
-            UpdateColumnCount();
-        }
-
-        private void Column_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            switch (e.PropertyName)
-            {
-                case nameof(CheckableItem<string>.IsChecked):
-                    UpdateColumnCount();
-                    break;
-            }
-        }
-
-        private void UpdateColumnCount()
-        {
-            ColumnCount = AllColumns ? null : (int?)Columns.Count(c => c.IsChecked);
-        }
-    }
-
     public partial class EntityAuditColumnsWindow : Window
     {
         private IEnumerable<EntityAuditColumnsItem> _entityAuditColumnsItems;
@@ -56,24 +18,84 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Windows
         public EntityAuditColumnsWindow()
         {
             InitializeComponent();
+
+            SubmitButton.Command = new RelayCommand(ExecuteSubmit, CanExecuteSubmit);
+            CancelButton.Command = new RelayCommand(ExecuteCancel, CanExecuteCancel);
+        }
+
+        private bool CanExecuteSubmit(object parameter)
+        {
+            return true;
+        }
+
+        private bool CanExecuteCancel(object parameter)
+        {
+            return true;
+        }
+
+        private void ExecuteSubmit(object parameter)
+        {
+            DialogResult = true;
+            Close();
+        }
+
+        private void ExecuteCancel(object parameter)
+        {
+            DialogResult = false;
+            Close();
         }
 
         public void SetSource(IEnumerable<EntityMetadata> entityMetadatas, IDictionary<string, ColumnSet> columns)
         {
-            _entityAuditColumnsItems = entityMetadatas.Select(em => new EntityAuditColumnsItem(em.LogicalName, em.DisplayName?.UserLocalizedLabel?.Label ?? em.LogicalName,
-                    em.Attributes.Where(am => am.IsAuditEnabled?.Value ?? false)
-                        .Select(am => new CheckableItem<string>(am.LogicalName, am.DisplayName?.UserLocalizedLabel?.Label ?? am.LogicalName)
-                        {
-                            IsChecked = columns.TryGetValue(em.LogicalName, out ColumnSet columnSet) && !columnSet.AllColumns && columnSet.Columns.Contains(am.LogicalName)
-                        })))
+            var entityAuditColumnsItemList = new List<EntityAuditColumnsItem>();
+            foreach (var entityMetadata in entityMetadatas)
+            {
+                var attributeSet = EntityAuditHelper.GetEntityAuditEntityColumns(entityMetadata)
+                    .ToHashSet();
+                var columnSet = columns?.TryGetValue(entityMetadata.LogicalName, out var cs) ?? false ? cs : null;
+
+                var cols = entityMetadata.Attributes.Where(am => attributeSet.Contains(am.LogicalName))
+                    .Select(am => new EntityAuditColumnsItemColumn(am.LogicalName, am.GetDisplayLabel())
+                    {
+                        IsChecked = !(columnSet?.AllColumns ?? false)
+                            && (columnSet?.Columns?.Contains(am.LogicalName) ?? false)
+                    })
+                    .OrderBy(ci => ci.DisplayName);
+                entityAuditColumnsItemList.Add(new EntityAuditColumnsItem(entityMetadata.LogicalName, entityMetadata.GetDisplayLabel(), cols)
+                {
+                    AllColumns = columnSet?.AllColumns ?? true
+                });
+            }
+
+            _entityAuditColumnsItems = entityAuditColumnsItemList.OrderBy(eaci => eaci.DisplayName)
                 .ToList();
             AuditEntityListBox.ItemsSource = _entityAuditColumnsItems;
         }
 
         public IDictionary<string, ColumnSet> Get()
         {
-            return _entityAuditColumnsItems.ToDictionary(eaci => eaci.Name, eaci => new ColumnSet(eaci.Columns.Where(c => c.IsChecked)
-                    .Select(c=> c.Value).ToArray()));
+            return _entityAuditColumnsItems?.ToDictionary(eaci => eaci.Name, eaci => eaci.AllColumns ? new ColumnSet(true)
+                    : new ColumnSet(eaci.Columns.Where(c => c.IsChecked).Select(c => c.Value).ToArray()));
+        }
+
+        private void AuditEntityListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (AuditEntityListBox.SelectedItem is EntityAuditColumnsItem entityAuditColumnsItem)
+            {
+                var allColumns = entityAuditColumnsItem?.AllColumns ?? false;
+                AllColumnsCheckBox.IsChecked = allColumns;
+                AuditEntityColumnsListBox.IsEnabled = !allColumns;
+                AuditEntityColumnsListBox.ItemsSource = entityAuditColumnsItem?.Columns;
+            }
+        }
+
+        private void AllColumnsCheckBox_IsCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            if (AuditEntityListBox.SelectedItem is EntityAuditColumnsItem entityAuditColumnsItem)
+            {
+                entityAuditColumnsItem.AllColumns = AllColumnsCheckBox.IsChecked ?? false;
+                AuditEntityColumnsListBox.IsEnabled = !entityAuditColumnsItem.AllColumns;
+            }
         }
     }
 }

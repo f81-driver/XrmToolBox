@@ -262,13 +262,14 @@
     <Compile Include="Helpers\FetchXmlHelper.cs" />
     <Compile Include="Mocks\AuditEntityItemsControlItemsSource.cs" />
     <Compile Include="Mocks\ColorTestItemsSource.cs" />
-    <Compile Include="Mocks\EntityAuditCriteriaWindowMocks.cs" />
+    <Compile Include="Mocks\EntityAuditColumnsWindowMocks.cs" />
     <Compile Include="Mocks\EntityAuditFilterOperationListBoxItemsSource.cs" />
     <Compile Include="Mocks\EntityAuditListViewItemsSource.cs" />
     <Compile Include="Mocks\AuditRecordItemsControlItemsSource.cs" />
     <Compile Include="Models\AuditEntity.cs" />
     <Compile Include="Models\EntityAudit.cs" />
     <Compile Include="Models\AuditRecord.cs" />
+    <Compile Include="Models\EntityAuditColumnsItem.cs" />
     <Compile Include="Models\EntityAuditDetail.cs" />
     <Compile Include="Models\EntityLookupValue.cs" />
     <Compile Include="Models\EntityAuditValue.cs" />

@@ -36,7 +36,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         private IEnumerable<ConditionExpression> _criteriaConditions;
         private IDictionary<string, ColumnSet> _columns;
         private OrderType _orderType;
-        private PagingInfo  _pageInfo;
+        //private PagingInfo  _pageInfo;
 
         public ICommand LoadCommand { get; }
         public ICommand EditFilters { get; }
@@ -46,7 +46,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         {
             _auditGogglesPluginControl = auditGogglesPluginControl;
             _orderType = OrderType.Descending;
-            _pageInfo = new PagingInfo { Count = 5000, PageNumber = 1 };
+            //_pageInfo = new PagingInfo { Count = 5000, PageNumber = 1 };
 
             LoadCommand = new RelayCommand(ExecuteLoad, CanExecuteLoad);
             EditFilters = new RelayCommand(ExecuteEditFilters, CanExecuteEditFilters);
@@ -99,9 +99,11 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         {
             try
             {
-                _columns = _auditGogglesPluginControl.ShowEntityAuditColumnsDialog(_columns);
-                ColumnCount = _criteriaConditions?.Count() ?? 0;
-                HasFilters = FilterCount > 0;
+                _columns = _auditGogglesPluginControl.ShowEntityAuditColumnsDialog(_columns)
+                    .Where(c => !c.Value.AllColumns)
+                    .ToDictionary(c => c.Key, c => c.Value);
+                ColumnCount = _columns?.Count() ?? 0;
+                HasColumns = ColumnCount > 0;
             }
             catch (Exception exception)
             {

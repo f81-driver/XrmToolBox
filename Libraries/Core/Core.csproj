@@ -46,6 +46,7 @@
     <Compile Include="Components\ObservableObject.cs" />
     <Compile Include="Extensions\ComponentModel\RunWorkerCompletedEventArgsEx.cs" />
     <Compile Include="Extensions\QueueEx.cs" />
+    <Compile Include="Extensions\StringEx.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\WindowUtility.cs" />
   </ItemGroup>

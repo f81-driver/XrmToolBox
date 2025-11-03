@@ -25,8 +25,8 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
         private const string ModifiedByAttributeName = "modifiedby";
         private const string ModifiedOnAttributeName = "modifiedon";
 
-        internal static readonly Audit_Action[] SupportedAuditActions = new Audit_Action[] { Audit_Action.Create, Audit_Action.Update };
-        internal static readonly int[] SupportedAuditActionValues = SupportedAuditActions.Select(aa => (int)aa).ToArray();
+        internal static readonly Audit_Operation[] SupportedAuditOperations = new Audit_Operation[] { Audit_Operation.Create, Audit_Operation.Update, Audit_Operation.Delete };
+        internal static readonly int[] SupportedAuditOperationValues = SupportedAuditOperations.Select(ao => (int)ao).ToArray();
 
         private readonly CrmServiceClient _serviceClient;
 
@@ -35,14 +35,14 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
             _serviceClient = serviceClient;
         }
 
-        internal EntityAudit ParseAudit(Audit audit, Entity entity, EntityMetadata entityMetadata, ColorCombination colorCombination)
+        internal EntityAudit ParseAudit(Audit audit, Entity entity, EntityMetadata entityMetadata, ColumnSet columns, ColorCombination colorCombination)
         {
             switch (audit.Operation)
             {
                 case Audit_Operation.Create:
                 case Audit_Operation.Update:
-                    //case Audit_Operation.Upsert:
-                    return CreateEntityAudit(audit, entity, entityMetadata, colorCombination);
+                case Audit_Operation.Delete:
+                    return GetCUDEntityAudit(audit, entity, entityMetadata, columns, colorCombination);                
             }
             return null;
         }
@@ -79,7 +79,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
                 : null;
         }
 
-        private EntityAudit CreateEntityAudit(Audit audit, Entity entity, EntityMetadata entityMetadata, ColorCombination colorCombination)
+        private EntityAudit GetCUDEntityAudit(Audit audit, Entity entity, EntityMetadata entityMetadata, ColumnSet columns, ColorCombination colorCombination)
         {
             var attributeNumbers = audit.AttributeMask?.Split(',').Select(a => int.TryParse(a, out int columnNumber) ? (int?)columnNumber : null)
                 .Where(a => a.HasValue)
@@ -87,7 +87,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
                     ?? Enumerable.Empty<int>();
             var changeData = JObject.Parse(audit.ChangeData);
             var attributes = entityMetadata.Attributes.Where(am => am.ColumnNumber.HasValue
-                                /*&& (columns.AllColumns || columns.Columns.Contains(am.LogicalName))*/)
+                                && ((columns?.AllColumns ?? true) || (columns?.Columns.Contains(am.LogicalName) ?? true)))
                             .ToDictionary(am => am.ColumnNumber.Value);
 
             return audit.CreatedOn.HasValue ?

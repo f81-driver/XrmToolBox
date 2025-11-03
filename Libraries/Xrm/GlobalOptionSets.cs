@@ -11,7 +11,7 @@
 using Microsoft.Xrm.Sdk.Client;
 using System.Runtime.Serialization;
 
-[assembly: ProxyTypesAssembly()]
+//[assembly: ProxyTypesAssembly()]
 
 
 namespace Formula81.XrmToolBox.Libraries.Xrm {

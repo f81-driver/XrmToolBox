@@ -6,10 +6,10 @@ namespace Formula81.XrmToolBox.Libraries.Parts.Controls
 {
     public partial class TimePicker : UserControl
     {
-        public static readonly DependencyProperty SelectedTimeProperty = DependencyProperty.Register("SelectedTime", typeof(DateTime), typeof(TimePicker), new PropertyMetadata(DateTime.Now, OnSelectedTimeChanged));
-        public static readonly DependencyProperty HourProperty = DependencyProperty.Register("Hour", typeof(int), typeof(TimePicker), new PropertyMetadata(0, OnHourChanged));
-        public static readonly DependencyProperty MinuteProperty = DependencyProperty.Register("Minute", typeof(int), typeof(TimePicker), new PropertyMetadata(0, OnMinuteChanged));
-        public static readonly DependencyProperty IsDropDownOpenProperty = DependencyProperty.Register("IsDropDownOpen", typeof(bool), typeof(TimePicker), new PropertyMetadata(false));
+        public static readonly DependencyProperty SelectedTimeProperty = DependencyProperty.Register(nameof(SelectedTime), typeof(DateTime), typeof(TimePicker), new PropertyMetadata(DateTime.Now, OnSelectedTimeChanged));
+        public static readonly DependencyProperty HourProperty = DependencyProperty.Register(nameof(Hour), typeof(int), typeof(TimePicker), new PropertyMetadata(0, OnHourChanged));
+        public static readonly DependencyProperty MinuteProperty = DependencyProperty.Register(nameof(Minute), typeof(int), typeof(TimePicker), new PropertyMetadata(0, OnMinuteChanged));
+        public static readonly DependencyProperty IsDropDownOpenProperty = DependencyProperty.Register(nameof(IsDropDownOpen), typeof(bool), typeof(TimePicker), new PropertyMetadata(false));
 
         public DateTime SelectedTime { get { return (DateTime)GetValue(SelectedTimeProperty); } set { SetValue(SelectedTimeProperty, value); } }
         public int Hour { get { return (int)GetValue(HourProperty); } set { SetValue(HourProperty, value); } }

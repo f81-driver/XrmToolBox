@@ -2,7 +2,6 @@
 using Formula81.XrmToolBox.Libraries.Parts.Input;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Forms;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Models;
-using Microsoft.Xrm.Sdk.Query;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

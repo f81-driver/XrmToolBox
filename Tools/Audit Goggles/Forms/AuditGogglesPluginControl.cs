@@ -36,6 +36,8 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
         private const string GitHubRepositoryName = "XrmToolBox";
         private const string GitHubUserName = "f81-driver";
         private const string FetchXmlBuilderSourcePluginName = "FetchXML Builder";
+        private const string PayPalEmailAccount = "formulaeightyone@gmail.com";
+        private const string PayPalDonationDescription = "Formula 81 Donation";
 
         public const int AuditRecordsMax = 100;
 
@@ -48,8 +50,8 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
 
         public AuditGogglesSettings Settings { get; private set; }
 
-        public string DonationDescription => "";
-        public string EmailAccount => "";
+        public string DonationDescription => PayPalDonationDescription;
+        public string EmailAccount => PayPalEmailAccount;
 
         public string RepositoryName => GitHubRepositoryName;
         public string UserName => GitHubUserName;
@@ -97,10 +99,11 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
                 && message.TargetArgument is string fetchXml
                 && !string.IsNullOrEmpty(fetchXml))
             {
-                //LoadAuditRecordsFetchXmlAsync(fetchXml);
                 LoadAuditRecordsAsync((service) =>
                 {
-                    return ServiceClient.RetrieveMultiple(new FetchExpression(fetchXml)).Entities.Select(e => e.ToEntityReference());
+                    return ServiceClient.RetrieveMultiple(new FetchExpression(fetchXml)).Entities
+                        .Where(e => !_auditGogglesView.AuditRecordViewModel.ContainsId(e.Id))
+                        .Select(e => e.ToEntityReference());
                 });
             }
         }
@@ -295,10 +298,10 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
                         }
                     }
                     var entityAuditHelper = new EntityAuditHelper(ServiceClient);
-                    //var entityAudits = auditList.Select(a => entityAuditHelper.ParseAudit(a, data[a.ObjectId.LogicalName][a.ObjectId.Id], entityMetadatas[a.ObjectId.LogicalName], columns[a.ObjectId.LogicalName], colorCombos[a.ObjectId.Id]));
                     var entityAudits = auditList.Select(a => entityAuditHelper.ParseAudit(a,
                                 data[a.ObjectId.LogicalName][a.ObjectId.Id],
                                 entityMetadatas[a.ObjectId.LogicalName],
+                                (columns?.TryGetValue(a.ObjectId.LogicalName, out var columnSet) ?? false) ? columnSet : null,
                                 colorCombos[a.ObjectId.Id]));
                     var defaultEntityAudits = auditRecordGroups.Where(g => !(entityMetadatas[g.Key]?.IsAuditEnabled?.Value ?? false))
                             .SelectMany(g => g.SelectMany(i => entityAuditHelper.GetDefaultEntityAudits(data[g.Key][i], entityMetadatas[g.Key], colorCombos[i])
@@ -392,9 +395,6 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
             var auditList = new List<Audit>();
             if (objectIds?.Any() ?? false)
             {
-                //var objectIdQueue = new Queue<Guid>(objectIds);
-                // (objectIdQueue.Count > 0)
-                //{
                 var query = new QueryExpression(Audit.EntityLogicalName)
                 {
                     ColumnSet = new ColumnSet(Audit.ColumnNames.AuditId,
@@ -410,8 +410,8 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
                         {
                             Conditions =
                             {
-                                new ConditionExpression(Audit.ColumnNames.ObjectId, ConditionOperator.In, objectIds/*Queue.DequeueChunk(100)*/.ToArray()),
-                                new ConditionExpression(Audit.ColumnNames.Action, ConditionOperator.In, EntityAuditHelper.SupportedAuditActionValues)
+                                new ConditionExpression(Audit.ColumnNames.ObjectId, ConditionOperator.In, objectIds.ToArray()),
+                                new ConditionExpression(Audit.ColumnNames.Operation, ConditionOperator.In, EntityAuditHelper.SupportedAuditOperationValues)
                             }
                         },
                     Orders = { new OrderExpression(Audit.ColumnNames.CreatedOn, orderType) },
@@ -443,7 +443,6 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
                         break;
                     }
                 }
-                //}
             }
             return auditList;
         }

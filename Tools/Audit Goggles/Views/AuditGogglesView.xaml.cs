@@ -30,8 +30,6 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Views
             CloseToolButton.Command = new RelayCommand(ExecuteCloseTool, CanExecuteCloseTool);
             RefreshButton.Command = new RelayCommand(ExecuteRefresh, CanExecuteRefresh);
 
-            ClearAuditEntityFilterButton.Command = new RelayCommand(ExecuteClearAuditEntityFilter, CanExecuteClearAuditEntityFilter);
-
             AddAuditRecordButton.Command = AuditRecordViewModel.AddCommand;
             AddAuditRecordFXBButton.Command = AuditRecordViewModel.FxbCommand;
             ClearAuditRecordsButton.Command = AuditRecordViewModel.ClearCommand;
@@ -52,11 +50,6 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Views
                 && _auditGogglesPluginControl.ConnectionDetail != null;
         }
 
-        internal bool CanExecuteClearAuditEntityFilter(object parameter)
-        {
-            return !_auditGogglesPluginControl.IsBusy;
-        }
-
         internal void ExecuteCloseTool(object parameter)
         {
             _auditGogglesPluginControl.CloseTool();
@@ -74,19 +67,14 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Views
             }
         }
 
-        internal void ExecuteClearAuditEntityFilter(object parameter)
-        {
-            AuditEntityFilterTextBox.Clear();
-        }
-
-        private void AuditEntityFilterTextBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            AuditEntityViewModel.SetFilter(AuditEntityFilterTextBox.Text);
-        }
-
         private void AuditRecordViewModel_ColorChanged(AuditRecord auditRecord)
         {
             EntityAuditViewModel.UpdateColorCombination(auditRecord);
+        }
+
+        private void AuditEntityFilterTextBox_FilterChanged(string filter)
+        {
+            AuditEntityViewModel.SetFilter(filter);
         }
     }
 }

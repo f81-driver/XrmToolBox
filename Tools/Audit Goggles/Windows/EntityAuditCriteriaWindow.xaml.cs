@@ -22,8 +22,14 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Windows
             OperationListBox.ItemsSource = CheckableEnumItem.ConvertEnum<Audit_Operation, OptionSetMetadataAttribute>(osma => osma.Name);
             ActionListBox.ItemsSource = CheckableEnumItem.ConvertEnum<Audit_Action, OptionSetMetadataAttribute>(osma => osma.Name);
 
+            ResetButton.Command = new RelayCommand(ExecuteReset, CanExecuteReset);
             SubmitButton.Command = new RelayCommand(ExecuteSubmit, CanExecuteSubmit);
             CancelButton.Command = new RelayCommand(ExecuteCancel, CanExecuteCancel);
+        }
+
+        private bool CanExecuteReset(object parameter)
+        {
+            return true;
         }
 
         private bool CanExecuteSubmit(object parameter)
@@ -34,6 +40,13 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Windows
         private bool CanExecuteCancel(object parameter)
         {
             return true;
+        }
+
+        private void ExecuteReset(object parameter)
+        {
+            ClearCriteria();
+            DialogResult = true;
+            Close();
         }
 
         private void ExecuteSubmit(object parameter)
@@ -51,11 +64,11 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Windows
         private void ClearCriteria()
         {
             ChangedDateFromCheckBox.IsChecked = false;
-            ChangedDateFromDatePicker.SelectedDate = null;
+            ChangedDateFromDatePicker.SelectedDate = DateTime.Today;
             ChangedDateFromTimePicker.Hour = DateTime.Now.AddHours(-1).Hour;
             ChangedDateFromTimePicker.Minute = DateTime.Now.Minute;
             ChangedDateToCheckBox.IsChecked = false;
-            ChangedDateToDatePicker.SelectedDate = null;
+            ChangedDateToDatePicker.SelectedDate = DateTime.Today;
             ChangedDateToTimePicker.Hour = DateTime.Now.Hour;
             ChangedDateToTimePicker.Minute = DateTime.Now.Minute;
             OperationCheckBox.IsChecked = false;

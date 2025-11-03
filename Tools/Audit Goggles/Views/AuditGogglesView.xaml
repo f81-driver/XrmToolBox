@@ -7,6 +7,7 @@
              xmlns:localcontrols="clr-namespace:Formula81.XrmToolBox.Tools.AuditGoggles.Controls"
              xmlns:localmocks="clr-namespace:Formula81.XrmToolBox.Tools.AuditGoggles.Mocks"
              xmlns:localmodels="clr-namespace:Formula81.XrmToolBox.Tools.AuditGoggles.Models"
+             xmlns:f81partscontrols="clr-namespace:Formula81.XrmToolBox.Libraries.Parts.Controls;assembly=Formula81.XrmToolBox.Libraries.Parts"
              xmlns:f81partsconverters ="clr-namespace:Formula81.XrmToolBox.Libraries.Parts.Converters;assembly=Formula81.XrmToolBox.Libraries.Parts"
              xmlns:f81xrmpartsconverters ="clr-namespace:Formula81.XrmToolBox.Libraries.XrmParts.Converters;assembly=Formula81.XrmToolBox.Libraries.XrmParts"
              mc:Ignorable="d" 
@@ -100,28 +101,9 @@
                     <RowDefinition Height="24" />
                     <RowDefinition Height="*" MinHeight="200" />
                 </Grid.RowDefinitions>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="24" />
-                    </Grid.ColumnDefinitions>
-                    <TextBox x:Name="AuditEntityFilterTextBox" FontSize="12" VerticalContentAlignment="Center" Margin="2"
-                             TextChanged="AuditEntityFilterTextBox_TextChanged"/>
-                    <Button x:Name="ClearAuditEntityFilterButton" Grid.Column="1" Content="❌" FontSize="8" Margin="0,2,2,2" />
-                    <TextBlock IsHitTestVisible="False" Text="Filter..." Foreground="Gray" Margin="5,0,0,0"
-                               VerticalAlignment="Center">
-                        <TextBlock.Style>
-                            <Style TargetType="{x:Type TextBlock}">
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Text, ElementName=AuditEntityFilterTextBox}" Value="">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                </Grid>
+                
+                <f81partscontrols:FilterInputControl x:Name="AuditEntityFilterTextBox" Grid.Column="2"  Margin="0,0,0,2"
+                                     FilterChanged="AuditEntityFilterTextBox_FilterChanged" />
 
                 <Label Grid.Row="1" Content="Favorites" Foreground="White" />
                 <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden"
@@ -145,19 +127,19 @@
 
             <ToolBarTray Grid.Column="3" IsLocked="True">
                 <ToolBar>
-                    <Button x:Name="AddAuditRecordButton">
+                    <Button x:Name="AddAuditRecordButton" ToolTip="Add Audit Record">
                         <WrapPanel>
                             <Image Source="/Formula81.XrmToolBox.Tools.AuditGoggles;component/Resources/Images/multiple.png" Width="24" />
                             <Label Content="Add" />
                         </WrapPanel>
                     </Button>
-                    <Button x:Name="AddAuditRecordFXBButton">
+                    <Button x:Name="AddAuditRecordFXBButton" ToolTip="Add Audit Records with FetchXml Builder">
                         <WrapPanel>
                             <Image Source="/Formula81.XrmToolBox.Tools.AuditGoggles;component/Resources/Images/FXB-2019-Sticker-24.png" Width="24" />
                             <Label Content="FetchXml" />
                         </WrapPanel>
                     </Button>
-                    <Button x:Name="ClearAuditRecordsButton">
+                    <Button x:Name="ClearAuditRecordsButton" ToolTip="Clear Audit Records">
                         <WrapPanel>
                             <Image Source="/Formula81.XrmToolBox.Tools.AuditGoggles;component/Resources/Images/broom.png" Width="24" />
                             <Label Content="Clear" />
@@ -222,11 +204,11 @@
                             <Image Source="/Formula81.XrmToolBox.Tools.AuditGoggles;component/Resources/Images/filter.png" Width="24" />
                             <Label Content="Edit Filters" />
                             <Border Width="18" Height="18" Background="Red" CornerRadius="9" Margin="0,-5,-5,0"
-                                        HorizontalAlignment="Right" VerticalAlignment="Top" 
-                                        Visibility="{Binding HasFilters, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    HorizontalAlignment="Right" VerticalAlignment="Top" 
+                                    Visibility="{Binding HasFilters, Converter={StaticResource BooleanToVisibilityConverter}}">
                                 <TextBlock Foreground="White" FontWeight="Bold" FontSize="11" 
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               Text="{Binding FilterCount}" />
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Text="{Binding FilterCount}" />
                             </Border>
                         </WrapPanel>
                     </Button>
@@ -235,11 +217,11 @@
                             <Image Source="/Formula81.XrmToolBox.Tools.AuditGoggles;component/Resources/Images/columns.png" Width="24" />
                             <Label Content="Edit Columns" />
                             <Border Width="18" Height="18" Background="Red" CornerRadius="9" Margin="0,-5,-5,0"
-                                        HorizontalAlignment="Right" VerticalAlignment="Top" 
-                                        Visibility="{Binding HasColumns, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    HorizontalAlignment="Right" VerticalAlignment="Top" 
+                                    Visibility="{Binding HasColumns, Converter={StaticResource BooleanToVisibilityConverter}}">
                                 <TextBlock Foreground="White" FontWeight="Bold" FontSize="11" 
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               Text="{Binding ColumnCount}" />
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Text="{Binding ColumnCount}" />
                             </Border>
                         </WrapPanel>
                     </Button>
@@ -327,13 +309,13 @@
                                                                 <ColumnDefinition Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource UIElementSizeConverter}, ConverterParameter=30*}" />
                                                                 <ColumnDefinition Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource UIElementSizeConverter}, ConverterParameter=40*}" />
                                                             </Grid.ColumnDefinitions>
-                                                            <TextBlock Text="{Binding ChangedFieldName}"
-                                                                           FontWeight="Bold"/>
+                                                            <TextBlock Text="{Binding ChangedFieldName}" ToolTip="{Binding ChangedFieldName}"
+                                                                       FontWeight="Bold"/>
                                                             <localcontrols:EntityAuditValueControl Grid.Column="1"
-                                                                                                   Value="{Binding OldValue}" />
+                                                                                                   Value="{Binding OldValue}" ToolTip="{Binding OldValue}" />
 
                                                             <localcontrols:EntityAuditValueControl Grid.Column="2"
-                                                                                                   Value="{Binding NewValue}" />
+                                                                                                   Value="{Binding NewValue}" ToolTip="{Binding NewValue}" />
 
                                                         </Grid>
                                                     </Border>

@@ -60,12 +60,16 @@
     <Compile Include="Components\ColorCombination.cs" />
     <Compile Include="Components\Rect.cs" />
     <Compile Include="Components\CheckableEnumItem.cs" />
+    <Compile Include="Controls\FilterInputControl.xaml.cs">
+      <DependentUpon>FilterInputControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\TimePicker.xaml.cs">
       <DependentUpon>TimePicker.xaml</DependentUpon>
     </Compile>
     <Compile Include="Converters\ByteArrayToImageConverter.cs" />
     <Compile Include="Converters\ColorToBrushConverter.cs" />
     <Compile Include="Converters\UIElementSizeConverter.cs" />
+    <Compile Include="Events\FilterChangedEvent.cs" />
     <Compile Include="Input\RelayCommand.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\BitmapImageUtility.cs" />
@@ -81,6 +85,10 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Controls\FilterInputControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\TimePicker.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

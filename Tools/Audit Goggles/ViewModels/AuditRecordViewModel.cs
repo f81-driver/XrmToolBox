@@ -10,6 +10,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 
 namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
@@ -21,7 +22,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         private readonly ObservableCollection<AuditRecord> _auditRecordCollection;
         private readonly HashSet<Guid> _auditRecordIdSet;
 
-        private int AuditRecordCount { get =>  _auditRecordCollection.Count; }
+        private int AuditRecordCount { get => _auditRecordCollection.Count; }
 
         public IEnumerable<AuditRecord> AuditRecords { get => _auditRecordCollection; }
         public bool IsEmpty { get => (_auditRecordCollection?.Count ?? 0) > 0; }
@@ -44,6 +45,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
 
             AddCommand = new RelayCommand(ExecuteAdd, CanExecuteAdd);
             FxbCommand = new RelayCommand(ExecuteFxb, CanExecuteFxb);
+            ClearCommand = new RelayCommand(ExecuteClear, CanExecuteClear);
             ChangeColorCommand = new RelayCommand(ExecuteChangeColor, CanExecuteChangeColor);
             RemoveCommand = new RelayCommand(ExecuteRemove, CanExecuteRemove);
         }
@@ -58,6 +60,12 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         {
             return !_auditGogglesPluginControl.IsBusy
                 && AuditRecordCount < AuditGogglesPluginControl.AuditRecordsMax;
+        }
+
+        internal bool CanExecuteClear(object parameter)
+        {
+            return !_auditGogglesPluginControl.IsBusy
+                && AuditRecordCount > 0;
         }
 
         internal bool CanExecuteChangeColor(object parameter)
@@ -100,6 +108,21 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
             catch (Exception exception)
             {
                 _auditGogglesPluginControl.ShowErrorDialog(exception, "Add Audit Record");
+            }
+        }
+
+        internal void ExecuteClear(object parameter)
+        {
+            try
+            {
+                if (MessageBox.Show("Clear all Audit Records?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    Clear();
+                }
+            }
+            catch (Exception exception)
+            {
+                _auditGogglesPluginControl.ShowErrorDialog(exception, "Clear Audit Records");
             }
         }
 

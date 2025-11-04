@@ -7,7 +7,6 @@ using Formula81.XrmToolBox.Libraries.Xrm.Helpers;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Caches;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Models;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 using Microsoft.Xrm.Tooling.Connector;
@@ -15,14 +14,11 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
 {
     internal class EntityAuditHelper
     {
-        private const string UnknownAuditOperation = "<Unknown>";
-
         private const string CreatedByAttributeName = "createdby";
         private const string CreatedOnAttributeName = "createdon";
         private const string ModifiedByAttributeName = "modifiedby";

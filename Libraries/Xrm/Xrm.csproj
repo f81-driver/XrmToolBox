@@ -102,6 +102,7 @@
     <Compile Include="ColumnNames\Audit.cs" />
     <Compile Include="ColumnNames\WebResource.cs" />
     <Compile Include="Caches\EntityIconCache.cs" />
+    <Compile Include="Extensions\AuditEx.cs" />
     <Compile Include="Extensions\Metadata\BooleanAttributeMetadataEx.cs" />
     <Compile Include="Extensions\Metadata\AttributeMetadataEx.cs" />
     <Compile Include="Extensions\Metadata\EntityMetadataEx.cs" />

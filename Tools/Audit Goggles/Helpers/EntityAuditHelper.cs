@@ -15,6 +15,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
 {
@@ -27,7 +28,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
         private const string ModifiedByAttributeName = "modifiedby";
         private const string ModifiedOnAttributeName = "modifiedon";
 
-        internal static readonly Audit_Operation[] SupportedAuditOperations = new Audit_Operation[] { Audit_Operation.Create, Audit_Operation.Update, Audit_Operation.Delete };
+        internal static readonly Audit_Operation[] SupportedAuditOperations = new Audit_Operation[] { Audit_Operation.Create, Audit_Operation.Update, Audit_Operation.Delete, Audit_Operation.Access };
         internal static readonly int[] SupportedAuditOperationValues = SupportedAuditOperations.Select(ao => (int)ao).ToArray();
 
         private readonly CrmServiceClient _serviceClient;
@@ -49,13 +50,19 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
                         case Audit_Action.Create:
                         case Audit_Action.Update:
                         case Audit_Action.Delete:
+                        case Audit_Action.Activate:
+                        case Audit_Action.Deactivate:
+                        case Audit_Action.Assign:
+                        case Audit_Action.SetState:
                             return GetCUDEntityAudit(audit, entity, entityMetadata, columns, colorCombination);
                         case Audit_Action.AssociateEntities:
                         case Audit_Action.DisassociateEntities:
                             return (columns?.AllColumns ?? true) ? GetNNEntityAudit(audit, entity, entityMetadata, colorCombination) : null;
                         default: return null;
                     }
-                default: return null;
+                case Audit_Operation.Access:
+                    return (columns?.AllColumns ?? true) ? GetAccessEntityAudit(audit, entity, entityMetadata, colorCombination) : null;
+                default : return null;
             }
         }
 
@@ -106,7 +113,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
                 new EntityAudit(audit.CreatedOn.Value.ToLocalTime(),
                     audit.UserId?.Name ?? audit.UserId.Id.ToString(),
                     GetEntityLookupValue(entity, entityMetadata),
-                    audit.Action?.ToString() ?? UnknownAuditOperation,
+                    audit.ActionDisplayName,
                     colorCombination,
                     attributeNumbers.Where(an => attributes.ContainsKey(an))
                         .Select(an => CreateEntityAuditDetail(changeData, entity, attributes[an]))
@@ -129,12 +136,22 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
                     return new EntityAudit(audit.CreatedOn.Value.ToLocalTime(),
                         audit.UserId?.Name ?? audit.UserId.Id.ToString(),
                         GetEntityLookupValue(entity, entityMetadata),
-                        audit.Action?.ToString() ?? UnknownAuditOperation,
+                        audit.ActionDisplayName,
                         colorCombination,
                         details);
                 }
             }
             return null;
+        }
+
+        private EntityAudit GetAccessEntityAudit(Audit audit, Entity entity, EntityMetadata entityMetadata, ColorCombination colorCombination)
+        {
+            return new EntityAudit(audit.CreatedOn.Value.ToLocalTime(),
+                        audit.UserId?.Name ?? audit.UserId.Id.ToString(),
+                        GetEntityLookupValue(entity, entityMetadata),
+                        audit.ActionDisplayName,
+                        colorCombination,
+                        null);
         }
 
         private EntityAuditDetail CreateEntityAuditDetail(JObject changeData, Entity entity, AttributeMetadata attributeMetadata)

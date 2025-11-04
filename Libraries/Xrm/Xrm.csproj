@@ -106,6 +106,7 @@
     <Compile Include="Extensions\Metadata\AttributeMetadataEx.cs" />
     <Compile Include="Extensions\Metadata\EntityMetadataEx.cs" />
     <Compile Include="GlobalOptionSets.cs" />
+    <Compile Include="Helpers\XrmHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources\XrmResourceRepository.cs" />
     <Compile Include="WebResource.cs" />

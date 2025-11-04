@@ -32,10 +32,12 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         private int _columnCount;
         public int ColumnCount { get => _columnCount; private set => SetValue(nameof(ColumnCount), value, ref _columnCount); }
 
+        private ListSortDirection _sortDirection;
+        public ListSortDirection SortDirection { get => _sortDirection; set => SetValue(nameof(SortDirection), value, ref _sortDirection); }
+
         private List<EntityAudit> _entityAudits;
         private IEnumerable<ConditionExpression> _criteriaConditions;
         private IDictionary<string, ColumnSet> _columns;
-        private OrderType _orderType;
 
         public ICommand LoadCommand { get; }
         public ICommand EditFilters { get; }
@@ -44,7 +46,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         public EntityAuditViewModel(AuditGogglesPluginControl auditGogglesPluginControl)
         {
             _auditGogglesPluginControl = auditGogglesPluginControl;
-            _orderType = OrderType.Descending;
+            _sortDirection = ListSortDirection.Descending;
             LoadCommand = new RelayCommand(ExecuteLoad, CanExecuteLoad);
             EditFilters = new RelayCommand(ExecuteEditFilters, CanExecuteEditFilters);
             EditColumns = new RelayCommand(ExecuteEditColumns, CanExecuteEditColumns);
@@ -70,7 +72,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         {
             try
             {
-                _auditGogglesPluginControl.LoadEntityAuditsAsync(_criteriaConditions, _columns, _orderType);
+                _auditGogglesPluginControl.LoadEntityAuditsAsync(_criteriaConditions, _columns, SortDirection == ListSortDirection.Ascending ? OrderType.Ascending : OrderType.Descending);
             }
             catch (Exception exception)
             {
@@ -113,19 +115,11 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
             _entityAuditsViewSource = null;
         }
 
-        /*internal void SortEntityAudits(string propertyName, bool descending)
-        {
-            _entityAuditsViewSource.SortDescriptions.Clear();
-            _entityAuditsViewSource.SortDescriptions.Add(new SortDescription(propertyName, descending ? ListSortDirection.Descending : ListSortDirection.Ascending));
-            _entityAuditsViewSource.Refresh();
-        }*/
-
         internal void SetSource(IEnumerable<EntityAudit> entityAudits)
         {
             _entityAudits = entityAudits?.ToList()
                 ?? new List<EntityAudit>();
             var entityAuditsViewSource = new CollectionViewSource { Source = _entityAudits }.View;
-            entityAuditsViewSource.SortDescriptions.Add(new SortDescription(nameof(EntityAudit.ChangedDate), ListSortDirection.Descending));
 
             EntityAuditsViewSource = entityAuditsViewSource;
         }

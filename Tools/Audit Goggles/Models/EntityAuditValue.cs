@@ -14,5 +14,10 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Models
             Value = value;
             DisplayValue = displayValue;
         }
+
+        public override string ToString()
+        {
+            return DisplayValue?.ToString();
+        }
     }
 }

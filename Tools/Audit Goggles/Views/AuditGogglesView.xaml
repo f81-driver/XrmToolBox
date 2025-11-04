@@ -101,7 +101,7 @@
                     <RowDefinition Height="24" />
                     <RowDefinition Height="*" MinHeight="200" />
                 </Grid.RowDefinitions>
-                
+
                 <f81partscontrols:FilterInputControl x:Name="AuditEntityFilterTextBox" Grid.Column="2"  Margin="0,0,0,2"
                                      FilterChanged="AuditEntityFilterTextBox_FilterChanged" />
 
@@ -199,6 +199,9 @@
                         </WrapPanel>
                     </Button>
                     <Separator />
+                    <Label Content="Sort" Margin="0,2,0,0" />
+                    <ComboBox x:Name="EntityAuditSortComboBox" Width="100" VerticalAlignment="Stretch" Margin="2,4,2,4"
+                              SelectedItem="{Binding SortDirection}" />
                     <Button x:Name="EditEntityAuditFiltersButton">
                         <WrapPanel>
                             <Image Source="/Formula81.XrmToolBox.Tools.AuditGoggles;component/Resources/Images/filter.png" Width="24" />

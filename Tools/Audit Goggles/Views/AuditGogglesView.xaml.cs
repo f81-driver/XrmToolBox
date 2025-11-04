@@ -3,6 +3,7 @@ using Formula81.XrmToolBox.Tools.AuditGoggles.Forms;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Models;
 using Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels;
 using System;
+using System.ComponentModel;
 using System.Windows.Controls;
 
 namespace Formula81.XrmToolBox.Tools.AuditGoggles.Views
@@ -35,6 +36,9 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Views
             ClearAuditRecordsButton.Command = AuditRecordViewModel.ClearCommand;
 
             LoadEntityAuditsButton.Command = EntityAuditViewModel.LoadCommand;
+
+            EntityAuditSortComboBox.ItemsSource = Enum.GetValues(typeof(ListSortDirection));
+
             EditEntityAuditFiltersButton.Command = EntityAuditViewModel.EditFilters;
             EditEntityAuditColumnsButton.Command = EntityAuditViewModel.EditColumns;
         }

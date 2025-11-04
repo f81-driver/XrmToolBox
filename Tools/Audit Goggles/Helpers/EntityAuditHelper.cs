@@ -3,9 +3,11 @@ using Formula81.XrmToolBox.Libraries.Parts.Components;
 using Formula81.XrmToolBox.Libraries.Xrm;
 using Formula81.XrmToolBox.Libraries.Xrm.Caches;
 using Formula81.XrmToolBox.Libraries.Xrm.Extensions.Metadata;
+using Formula81.XrmToolBox.Libraries.Xrm.Helpers;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Caches;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Models;
 using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 using Microsoft.Xrm.Tooling.Connector;
@@ -42,9 +44,19 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
                 case Audit_Operation.Create:
                 case Audit_Operation.Update:
                 case Audit_Operation.Delete:
-                    return GetCUDEntityAudit(audit, entity, entityMetadata, columns, colorCombination);                
+                    switch (audit.Action)
+                    {
+                        case Audit_Action.Create:
+                        case Audit_Action.Update:
+                        case Audit_Action.Delete:
+                            return GetCUDEntityAudit(audit, entity, entityMetadata, columns, colorCombination);
+                        case Audit_Action.AssociateEntities:
+                        case Audit_Action.DisassociateEntities:
+                            return (columns?.AllColumns ?? true) ? GetNNEntityAudit(audit, entity, entityMetadata, colorCombination) : null;
+                        default: return null;
+                    }
+                default: return null;
             }
-            return null;
         }
 
         internal IEnumerable<EntityAudit> GetDefaultEntityAudits(Entity entity, EntityMetadata entityMetadata, ColorCombination colorCombination)
@@ -101,6 +113,28 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
                         .OrderBy(ead => ead.ChangedFieldName)
                         .ToList())
                 : null;
+        }
+
+        private EntityAudit GetNNEntityAudit(Audit audit, Entity entity, EntityMetadata entityMetadata, ColorCombination colorCombination)
+        {
+            if (string.IsNullOrEmpty(audit.AttributeMask))
+            {
+                var detailDatas = audit.ChangeData?.Split('~');
+                if ((detailDatas?.Length ?? 0) == 2)
+                {
+                    var entityRef = XrmHelper.FromCommaSeparated(detailDatas[1]);
+                    var entityRefMetadata = _serviceClient.GetEntityMetadata(entityRef.LogicalName);
+                    var displayValue = GetEntityLookupValue(entityRef, entityRefMetadata);
+                    var details = new EntityAuditDetail[] { new EntityAuditDetail(entityMetadata?.GetDisplayLabel(), null, new EntityAuditValue(entityRef, displayValue)) };
+                    return new EntityAudit(audit.CreatedOn.Value.ToLocalTime(),
+                        audit.UserId?.Name ?? audit.UserId.Id.ToString(),
+                        GetEntityLookupValue(entity, entityMetadata),
+                        audit.Action?.ToString() ?? UnknownAuditOperation,
+                        colorCombination,
+                        details);
+                }
+            }
+            return null;
         }
 
         private EntityAuditDetail CreateEntityAuditDetail(JObject changeData, Entity entity, AttributeMetadata attributeMetadata)
@@ -191,15 +225,11 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
                         }
                         else
                         {
-                            var entityRefValues = auditValue.Split(',');
-                            if (entityRefValues.Length == 2
-                                && Guid.TryParse(entityRefValues[1], out Guid id))
+                            var entityRef = XrmHelper.FromCommaSeparated(auditValue);
+                            if (entityRef != null)
                             {
-                                var entityRef = new EntityReference(entityRefValues[0], id);
                                 var entityMetadata = _serviceClient.GetEntityMetadata(entityRef.LogicalName);
-                                var iconData = EntityIconCache.Instance.Get(entityMetadata);
-                                entityRef.Name = EntityNameCache.Instance.Get(entityRef.LogicalName, entityRef.Id);
-                                displayValue = new EntityLookupValue(entityMetadata.ObjectTypeCode, id, entityRef.Name, entityRef.LogicalName, entityMetadata.DisplayName?.UserLocalizedLabel?.Label, iconData);
+                                displayValue = GetEntityLookupValue(entityRef, entityMetadata);
                                 value = entityRef;
                             }
                         }
@@ -209,11 +239,27 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
             return value == null ? null : new EntityAuditValue(value, displayValue);
         }
 
+        private static EntityLookupValue GetEntityLookupValue(EntityReference entityRef, EntityMetadata entityMetadata)
+        {
+            var iconData = EntityIconCache.Instance.Get(entityMetadata);
+            entityRef.Name = EntityNameCache.Instance.Get(entityRef.LogicalName, entityRef.Id);
+            return new EntityLookupValue(entityMetadata.ObjectTypeCode,
+                entityRef.Id,
+                entityRef.Name,
+                entityRef.LogicalName,
+                entityMetadata?.GetDisplayLabel(),
+                iconData);
+        }
+
         private static EntityLookupValue GetEntityLookupValue(Entity entity, EntityMetadata entityMetadata)
         {
-            var recordIconData = EntityIconCache.Instance.Get(entityMetadata);
-            var record = new EntityLookupValue(entityMetadata.ObjectTypeCode, entity.Id, entity.GetAttributeValue<string>(entityMetadata.PrimaryNameAttribute), entity.LogicalName, entityMetadata.DisplayName?.UserLocalizedLabel?.Label, recordIconData);
-            return record;
+            var iconData = EntityIconCache.Instance.Get(entityMetadata);
+            return new EntityLookupValue(entityMetadata.ObjectTypeCode,
+                entity.Id,
+                entity.GetAttributeValue<string>(entityMetadata.PrimaryNameAttribute),
+                entity.LogicalName,
+                entityMetadata?.GetDisplayLabel(),
+                iconData);
         }
 
         internal static string[] GetEntityAuditEntityColumns(EntityMetadata entityMetadata)

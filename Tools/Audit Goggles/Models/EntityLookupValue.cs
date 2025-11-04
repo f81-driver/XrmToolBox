@@ -21,5 +21,10 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Models
             EntityDisplayName = entityDisplayName;
             IconData = iconData;
         }
+
+        public override string ToString()
+        {
+            return Name ?? Id.ToString();
+        }
     }
 }

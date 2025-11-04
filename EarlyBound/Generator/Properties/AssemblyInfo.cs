@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("XrmContext")]
+[assembly: AssemblyTitle("Generator")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("HP Inc.")]
-[assembly: AssemblyProduct("XrmContext")]
+[assembly: AssemblyProduct("Generator")]
 [assembly: AssemblyCopyright("Copyright © HP Inc. 2025")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("9f8911a9-c389-48a7-acdd-043133694a75")]
+[assembly: Guid("f52b7aad-6059-4330-9f47-042d4d94444b")]
 
 // Version information for an assembly consists of the following four values:
 //

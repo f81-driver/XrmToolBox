@@ -12,12 +12,12 @@ jobs:
 
     strategy:
       matrix:
-        configuration: [Debug, Release]
+        configuration: [Release]
 
     runs-on: windows-latest
 
     env:
-      Solution_Name: Tools.sln
+      Solution_Name: Tools/Tools.sln
 
     steps:
     - name: Checkout

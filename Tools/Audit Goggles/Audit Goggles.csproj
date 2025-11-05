@@ -127,6 +127,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="version.json" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Forms\AuditGogglesPluginControl.resx">
@@ -255,6 +256,11 @@ IF $(ConfigurationName) == Debug (
 )
 </PostBuildEvent>
   </PropertyGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties version_1json__JsonSchema="" />
+    </VisualStudio>
+  </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

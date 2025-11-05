@@ -1,0 +1,45 @@
+name: Build Audit Goggles Tool
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    strategy:
+      matrix:
+        configuration: [Release]
+
+    runs-on: windows-latest
+
+    env:
+      Solution_Name: Tools/Tools.sln
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v2
+
+    - name: Restore NuGet packages
+      run: nuget restore ${{ env.Solution_name }}
+
+    - name: Build
+      run: msbuild ${{ env.Solution_name }} /p:Configuration=Release
+
+    - name: Create ZIP of build output
+      run: |
+        powershell Compress-Archive -Path "Audit Goggles\bin\Release\Formula81*.dll" -DestinationPath "build-output.zip"
+        
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-release-zip
+        path: build-output.zip

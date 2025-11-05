@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main" ]  
 
 jobs:
 
@@ -24,17 +24,22 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+
+    - name: Read version.json
+      id: version
+      run: |
+        $json = Get-Content 'Tools\\Audit Goggles\\version.json' | ConvertFrom-Json
+        echo "MAJOR=$($json.major)" >> $env:GITHUB_ENV
+        echo "MINOR=$($json.minor)" >> $env:GITHUB_ENV        
         
     - name: Generate version
       id: genver
       shell: pwsh
       run: |
-        $major = 1
-        $minor = 0
         $year = (Get-Date).ToString('yy')
         $dayOfYear = (Get-Date).DayOfYear.ToString('000')
         $revision = $env:GITHUB_RUN_NUMBER
-        $version = "$major.$minor.$year$dayOfYear.$revision"
+        $version = $env:MAJOR.$env:MINOR.$year$dayOfYear.$revision"
         Write-Host "Generated version: $version"
         "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
@@ -48,12 +53,8 @@ jobs:
       uses: microsoft/setup-msbuild@v2      
 
     - name: Build
-      run: msbuild ${{ env.Solution_name }} /p:Configuration=Release /p:Version=${{ env.VERSION }}
-
-    #- name: Create ZIP of build output
-      #run: |
-        #powershell -Command "& { Compress-Archive -Path 'Tools\\Audit Goggles\\bin\\Release\\Formula81*.dll' -DestinationPath 'build-output.zip' }"
-        
+      run: msbuild ${{ env.Solution_name }} /p:Configuration=Release /p:Version=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:FileVersion=${{ env.VERSION }} /p:InformationalVersion=${{ env.VERSION }}
+   
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
       with:

@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>4953ecaf-2ce2-4468-90e9-b85f9ca9c5db</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Xrm</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Audit.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Caches\EntityIconCache.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ColumnNames\Audit.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ColumnNames\WebResource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\AuditEx.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\Metadata\AttributeMetadataEx.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\Metadata\BooleanAttributeMetadataEx.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\Metadata\EntityMetadataEx.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GlobalOptionSets.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\XrmHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Resources\XrmResourceRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WebResource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XrmExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XrmToolkit.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_10.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1010.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1011.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1013.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1022.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1036.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1055.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1056.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1084.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1085.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1088.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1089.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1090.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1091.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_112.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1145.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1146.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1147.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1148.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1149.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1150.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1151.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_1152.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_123.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_126.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_127.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_129.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_2.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_2020.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_2029.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_3.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_3234.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_4.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_4000.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_4001.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_4002.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_4003.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_4009.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_4200.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_4201.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_4202.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_4204.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_4206.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_4207.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_4208.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_4209.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_4210.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_4211.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_4212.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_4214.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_50.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_8.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_9.gif" />
+    <Resource Include="$(MSBuildThisFileDirectory)Resources\EntityIcons\ico_16_customEntity.gif" />
+  </ItemGroup>
+</Project>

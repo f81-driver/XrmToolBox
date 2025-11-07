@@ -44,14 +44,24 @@ jobs:
       id: setassemblyinfover
       shell: pwsh
       run: |
-        $version = ${{ env.VERSIOn }}
-        Get-ChildItem -Path . -Recurse -Include AssemblyInfo.cs | ForEach-Object {
-        (Get-Content $_) `
-          -replace 'AssemblyVersion\(".*"\)', "AssemblyVersion(`"$version`")" `
-          -replace 'AssemblyFileVersion\(".*"\)', "AssemblyFileVersion(`"$version`")" `
-          -replace 'AssemblyInformationalVersion\(".*"\)', "AssemblyInformationalVersion(`"$version`")" `
-          | Set-Content $_
+        $version = ${{ env.VERSION }}
+        Write-Host "##[group]Setting assembly version to $version"
+        # --- Update all AssemblyInfo.cs files ---
+        $files = Get-ChildItem -Path . -Recurse -Include AssemblyInfo.cs
+        foreach ($file in $files) {
+          Write-Host "Updating: $($file.FullName)"
+            (Get-Content $file) `
+              -replace 'AssemblyVersion\(".*"\)', "AssemblyVersion(`"$version`")" `
+              -replace 'AssemblyFileVersion\(".*"\)', "AssemblyFileVersion(`"$version`")" `
+              -replace 'AssemblyInformationalVersion\(".*"\)', "AssemblyInformationalVersion(`"$version`")" `
+            | Set-Content $file
+
+            # Verify change and output matching lines to log
+            $updatedLines = Select-String -Path $file.FullName -Pattern 'Assembly.*Version'
+            $updatedLines | ForEach-Object { Write-Host "→ $($_.Line)" }
+            Write-Host "------"
         }
+        Write-Host "##[endgroup]"
 
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v2

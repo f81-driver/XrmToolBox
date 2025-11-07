@@ -54,6 +54,18 @@ jobs:
             $updatedLines | ForEach-Object { Write-Host "→ $($_.Line)" }
             Write-Host "------"
         }
+        # --- Update NuSpec version tags ---
+        $nuspecFiles = Get-ChildItem -Path . -Recurse -Include *.nuspec
+        foreach ($nuspec in $nuspecFiles) {
+          Write-Host "Updating NuSpec: $($nuspec.FullName)"
+          (Get-Content $nuspec) `
+            -replace '<version>.*?</version>', "<version>$version</version>" `
+            | Set-Content $nuspec
+          # Log confirmation
+          $updatedLine = Select-String -Path $nuspec.FullName -Pattern '<version>'
+          Write-Host "→ $($updatedLine.Line)"
+          Write-Host "------"
+        }
         Write-Host "##[endgroup]"
         "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
@@ -68,9 +80,18 @@ jobs:
 
     - name: Build
       run: msbuild Tools/Tools.sln /p:Configuration=Release
+
+    - name: Pack NuGet package
+      run: nuget pack Tools/AuditGoggles.nuspec -OutputDirectory nupkg-output -Version ${{ env.VERSION }}      
    
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
       with:
-        name:  Formula81.XrmToolBox.Tools.AuditGoggles.${{ env.VERSION }}
+        name: Bin.Formula81.XrmToolBox.Tools.AuditGoggles.${{ env.VERSION }}
         path: 'Tools\\Audit Goggles\\bin\\Release\\Formula81*.dll'
+
+    - name: Upload nupkg artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Nupkg.Formula81.XrmToolBox.Tools.AuditGoggles.${{ env.VERSION }}
+        path: nupkg-output\*.nupkg

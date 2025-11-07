@@ -38,13 +38,6 @@ jobs:
         $revision = $env:GITHUB_RUN_NUMBER
         $version = "$env:MAJOR.$env:MINOR.$year$dayOfYear.$revision"
         Write-Host "Generated version: $version"
-        "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-    - name: Set AssemblyInfo version
-      id: setassemblyinfover
-      shell: pwsh
-      run: |
-        $version = ${{ env.VERSION }}
         Write-Host "##[group]Setting assembly version to $version"
         # --- Update all AssemblyInfo.cs files ---
         $files = Get-ChildItem -Path . -Recurse -Include AssemblyInfo.cs
@@ -62,6 +55,7 @@ jobs:
             Write-Host "------"
         }
         Write-Host "##[endgroup]"
+        "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v2

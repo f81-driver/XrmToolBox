@@ -109,7 +109,7 @@ jobs:
 
     - name: Output VERSION to release
       id: outputversion
-      run: echo "version=$VERSION" >> $GITHUB_OUTPUT
+      run: echo "version=${{ env.VERSION }}" >> $GITHUB_OUTPUT
         
   release:
     needs: build

@@ -33,4 +33,7 @@ jobs:
         shell: pwsh
 
       - name: Publish to NuGet.org
-        run: nuget push "./nupkg/*.nupkg" -ApiKey ${{ secrets.NUGET_API_KEY }} -Source https://api.nuget.org/v3/index.json -SkipDuplicate
+        shell: pwsh
+        run: nuget push "./nupkg/*.nupkg" -ApiKey $env:NUGET_API_KEY -Source https://api.nuget.org/v3/index.json -SkipDuplicate
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}

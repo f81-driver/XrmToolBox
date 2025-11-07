@@ -1,4 +1,4 @@
-name: Publish & Release Audit Goggles Tool
+name: Audit Goggles - Publish & Release
 
 on:
   workflow_dispatch:

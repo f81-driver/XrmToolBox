@@ -115,6 +115,8 @@ jobs:
     needs: build
     runs-on: windows-latest
     if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true' }}
+    permissions:
+      contents: write    
     steps:
     - name: Show version from build
       run: echo "Releasing version ${{ needs.build.outputs.version }}"
@@ -130,6 +132,10 @@ jobs:
       with:
         name: Bin.Formula81.XrmToolBox.Tools.AuditGoggles.${{ needs.build.outputs.version }}
         path: releaseartifacts
+
+    - name: Zip binaries
+      run: Compress-Archive -Path "releaseartifacts/*.dll" -DestinationPath "releaseartifacts/Formula81.XrmToolBox.Tools.AuditGoggles.${{ needs.build.outputs.version }}.zip"
+      shell: pwsh        
 
     # Optionally confirm what was downloaded
     - name: List downloaded files

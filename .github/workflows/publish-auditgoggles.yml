@@ -1,0 +1,29 @@
+name: Publish Audit Goggles Tool
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_version:
+        description: "Version to publish (e.g. 1.0.25310.42)"
+        required: true
+        type: string
+
+env:
+  NUGET_SOURCE: https://api.nuget.org/v3/index.json
+
+jobs:
+  publish:
+    runs-on: windows-latest
+
+    steps:
+    - name: Download Package Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: Nupkg.Formula81.XrmToolBox.Tools.AuditGoggles.${{ github.event.inputs.build_version }}
+        path: nupkg-input
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v2
+
+    - name: Publish to NuGet.org
+      run: nuget push nupkg-input\*.nupkg -Source ${{ env.NUGET_SOURCE }} -ApiKey ${{ secrets.NUGET_API_KEY }} -SkipDuplicate

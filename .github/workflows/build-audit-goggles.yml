@@ -16,9 +16,6 @@ jobs:
 
     runs-on: windows-latest
 
-    env:
-      Solution_Name: Tools/Tools.sln
-
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -43,17 +40,30 @@ jobs:
         Write-Host "Generated version: $version"
         "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
+    - name: Set AssemblyInfo version
+      id: setassemblyinfover
+      shell: pwsh
+      run: |
+        $version = ${{ env.VERSIOn }}
+        Get-ChildItem -Path . -Recurse -Include AssemblyInfo.cs | ForEach-Object {
+        (Get-Content $_) `
+          -replace 'AssemblyVersion\(".*"\)', "AssemblyVersion(`"$version`")" `
+          -replace 'AssemblyFileVersion\(".*"\)', "AssemblyFileVersion(`"$version`")" `
+          -replace 'AssemblyInformationalVersion\(".*"\)', "AssemblyInformationalVersion(`"$version`")" `
+          | Set-Content $_
+        }
+
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v2
 
     - name: Restore NuGet packages
-      run: nuget restore ${{ env.Solution_name }}
+      run: nuget restore Tools/Tools.sln
 
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v2      
 
     - name: Build
-      run: msbuild ${{ env.Solution_name }} /p:Configuration=Release /p:Version=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:FileVersion=${{ env.VERSION }} /p:InformationalVersion=${{ env.VERSION }}
+      run: msbuild Tools/Tools.sln /p:Configuration=Release
    
     - name: Upload build artifact
       uses: actions/upload-artifact@v4

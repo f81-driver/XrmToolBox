@@ -1,4 +1,4 @@
-name: Publish NuGet Package
+name: Audit Goggles - Publish NuGet
 
 on:
   workflow_dispatch:

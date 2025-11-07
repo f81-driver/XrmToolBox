@@ -18,6 +18,10 @@ jobs:
     steps:
       #- name: Checkout repository
         #uses: actions/checkout@v4
+      - name: Test NugetApiKey
+        shell: pwsh
+        run: |
+          Write-Host "NuGet API Key length: $($env:NUGET_API_KEY.Length)"
 
       # Download the .nupkg from your release
       - name: Download release assets

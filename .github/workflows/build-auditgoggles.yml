@@ -104,22 +104,29 @@ jobs:
         name: Nupkg.Formula81.XrmToolBox.Tools.AuditGoggles.${{ env.VERSION }}
         path: nupkg-output\*.nupkg
         zip: false
+
+    - name: Pass VERSION to release
+      id: passversion
+      run: echo "::set-output name=version::${{ env.VERSION }}"
         
   release:
     needs: build
     runs-on: windows-latest
     if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true' }}
     steps:
+    - name: Use VERSION from buil
+      run: echo "Version is ${{ needs.build.outputs.version }} (env.Version = ${{ env.VERSION }})"
+        
     - name: Download Nupkg Artifact
       uses: actions/download-artifact@v4
       with:
-        name: Nupkg.Formula81.XrmToolBox.Tools.AuditGoggles.${{ github.event.inputs.build_version }}
+        name: Nupkg.Formula81.XrmToolBox.Tools.AuditGoggles.${{ needs.build.outputs.version }}
         path: nupkg-input
 
     - name: Download Bin Artifact
       uses: actions/download-artifact@v4
       with:
-        name: Bin.Formula81.XrmToolBox.Tools.AuditGoggles.${{ github.event.inputs.build_version }}
+        name: Bin.Formula81.XrmToolBox.Tools.AuditGoggles.${{ needs.build.outputs.version }}
         path: bin-input   
         
     # Create or update GitHub Release
@@ -127,9 +134,9 @@ jobs:
       id: create_release
       uses: actions/create-release@v1
       with:
-        tag_name: ${{ env.VERSION }}
-        release_name: Release ${{ env.VERSION }}
-        body: "Release ${{ env.VERSION }} published via workflow."
+        tag_name: ${{ needs.build.outputs.version }}
+        release_name: Release ${{ needs.build.outputs.version }}
+        body: "Release ${{ needs.build.outputs.version }} published via workflow."
         draft: false
         prerelease: false
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -140,7 +147,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: nupkg-input\*.nupkg
-        asset_name: Formula81.XrmToolBox.Tools.AuditGoggles.${{ env.VERSION }}.nupkg
+        asset_name: Formula81.XrmToolBox.Tools.AuditGoggles.${{ needs.build.outputs.version }}.nupkg
         asset_content_type: application/octet-stream
         
     - name: Upload Bin to Release
@@ -148,5 +155,5 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: bin-input\*.zip
-        asset_name: Formula81.XrmToolBox.Tools.AuditGoggles.${{ env.VERSION }}.zip
+        asset_name: Formula81.XrmToolBox.Tools.AuditGoggles.${{ needs.build.outputs.version }}.zip
         asset_content_type: application/zip     

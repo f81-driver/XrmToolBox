@@ -27,7 +27,7 @@ using XrmToolBox.Extensibility;
 using XrmToolBox.Extensibility.Interfaces;
 using F81Rect = Formula81.XrmToolBox.Libraries.Parts.Components.Rect;
 
-namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
+namespace Formula81.XrmToolBox.Tools.AuditGoggles
 {
     public partial class AuditGogglesPluginControl : PluginControlBase, IMessageBusHost, IGitHubPlugin, IPayPalPlugin
     {
@@ -36,8 +36,6 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
         private const string GitHubRepositoryName = "XrmToolBox";
         private const string GitHubUserName = "f81-driver";
         private const string FetchXmlBuilderSourcePluginName = "FetchXML Builder";
-        private const string PayPalEmailAccount = "formulaeightyone@gmail.com";
-        private const string PayPalDonationDescription = "Formula 81 Donation";
 
         public const int AuditRecordsMax = 100;
 
@@ -50,11 +48,10 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
 
         public AuditGogglesSettings Settings { get; private set; }
 
-        public string DonationDescription => PayPalDonationDescription;
-        public string EmailAccount => PayPalEmailAccount;
-
         public string RepositoryName => GitHubRepositoryName;
         public string UserName => GitHubUserName;
+        public string DonationDescription => AuditGogglesPlugin.PayPalDonationDescription;
+        public string EmailAccount => AuditGogglesPlugin.PayPalEmailAccount;
 
         private CrmServiceClient ServiceClient { get => (ConnectionDetail?.ServiceClient?.IsReady ?? false ? ConnectionDetail.ServiceClient : null) ?? throw new InvalidOperationException(ServiceClientNotAvailableMessage); }
 

@@ -1,6 +1,5 @@
 ﻿using Formula81.XrmToolBox.Libraries.Core.Components;
 using Formula81.XrmToolBox.Libraries.Parts.Input;
-using Formula81.XrmToolBox.Tools.AuditGoggles.Forms;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Models;
 using System;
 using System.Collections.Generic;

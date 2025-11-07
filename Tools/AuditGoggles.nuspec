@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>Formula81.XrmToolBox.Tools.AuditGoggles</id>
+    <version>1.0.0</version>
+    <title>Audit Goggles</title>
+    <authors>F81 Driver</authors>
+    <owners>Formula81</owners>
+	<projectUrl>https://github.com/f81-driver/XrmToolBox</projectUrl>
+	<requireLicenseAcceptance>false</requireLicenseAcceptance>
+	<summary>Dataverse Audit History Tool</summary>
+    <description>XrmToolBox Tool. Protects you sight from the perils of Audit History</description>
+	<releaseNotes>
+1.0 Initial release
+	</releaseNotes>
+    <copyright>Copyright 2025 Formula81</copyright>
+    <tags>XrmToolBox Tool Audit Goggles History Dataverse Dynamics Power Platform</tags>
+    <dependencies>
+      <dependency id="XrmToolBox" version="1.2025.10.74" />
+    </dependencies>
+  </metadata>
+  <files>
+	<file src="Audit Goggles\bin\Release\Formula81.XrmToolBox.Libraries.Core.dll" target="lib\net481\Plugins" />
+	<file src="Audit Goggles\bin\Release\Formula81.XrmToolBox.Libraries.Json.dll" target="lib\net481\Plugins" />
+	<file src="Audit Goggles\bin\Release\Formula81.XrmToolBox.Libraries.Parts.dll" target="lib\net481\Plugins" />
+	<file src="Audit Goggles\bin\Release\Formula81.XrmToolBox.Libraries.Xrm.dll" target="lib\net481\Plugins" />
+	<file src="Audit Goggles\bin\Release\Formula81.XrmToolBox.Libraries.XrmParts.dll" target="lib\net481\Plugins" />
+	<file src="Audit Goggles\bin\Release\Formula81.XrmToolBox.Tools.AuditGoggles.dll" target="lib\net481\Plugins" />
+  </files>
+</package>

@@ -1,4 +1,4 @@
-﻿namespace Formula81.XrmToolBox.Tools.AuditGoggles.Forms
+﻿namespace Formula81.XrmToolBox.Tools.AuditGoggles
 {
     partial class AuditGogglesPluginControl
     {
@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AuditGogglesPluginControl));
             this.SuspendLayout();
             // 
             // AuditGogglesPluginControl
@@ -36,6 +37,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "AuditGogglesPluginControl";
+            this.PluginIcon = ((System.Drawing.Icon)(resources.GetObject("$this.PluginIcon")));
             this.Size = new System.Drawing.Size(839, 462);
             this.ResumeLayout(false);
 

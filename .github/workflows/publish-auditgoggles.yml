@@ -14,6 +14,7 @@ permissions:
 
 jobs:
   publish:
+    environment: 'Nuget Publish'
     runs-on: windows-latest
     steps:
       #- name: Checkout repository

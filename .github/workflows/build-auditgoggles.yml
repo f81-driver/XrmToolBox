@@ -95,3 +95,4 @@ jobs:
       with:
         name: Nupkg.Formula81.XrmToolBox.Tools.AuditGoggles.${{ env.VERSION }}
         path: nupkg-output\*.nupkg
+        zip: false

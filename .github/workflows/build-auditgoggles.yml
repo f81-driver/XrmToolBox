@@ -116,46 +116,41 @@ jobs:
     runs-on: windows-latest
     if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true' }}
     steps:
-    - name: Use VERSION from build
-      run: echo "Version is ${{ needs.build.outputs.version }}"
-        
+    - name: Show version from build
+      run: echo "Releasing version ${{ needs.build.outputs.version }}"
+
     - name: Download Nupkg Artifact
       uses: actions/download-artifact@v4
       with:
         name: Nupkg.Formula81.XrmToolBox.Tools.AuditGoggles.${{ needs.build.outputs.version }}
-        path: nupkg-input
+        path: releaseartifacts
 
     - name: Download Bin Artifact
       uses: actions/download-artifact@v4
       with:
         name: Bin.Formula81.XrmToolBox.Tools.AuditGoggles.${{ needs.build.outputs.version }}
-        path: bin-input   
-        
-    # Create or update GitHub Release
-    - name: Create GitHub Release
-      id: create_release
-      uses: actions/create-release@v1
+        path: releaseartifacts
+
+    # Optionally confirm what was downloaded
+    - name: List downloaded files
+      run: |
+        Write-Host "NuPkg files:"
+        Get-ChildItem -Path releaseartifacts -Recurse
+      shell: pwsh
+
+    # Create the GitHub Release and upload assets
+    - name: Create GitHub Release with assets
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ needs.build.outputs.version }}
-        release_name: Release ${{ needs.build.outputs.version }}
-        body: "Release ${{ needs.build.outputs.version }} published via workflow."
+        name: Release ${{ needs.build.outputs.version }}
+        body: |
+          **Release:** ${{ needs.build.outputs.version }}
+          This release was manually triggered via workflow dispatch.
         draft: false
         prerelease: false
-        token: ${{ secrets.GITHUB_TOKEN }}
-
-    # Upload artifact(s) to the release
-    - name: Upload NuGet to Release
-      uses: actions/upload-release-asset@v1
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: nupkg-input\*.nupkg
-        asset_name: Formula81.XrmToolBox.Tools.AuditGoggles.${{ needs.build.outputs.version }}.nupkg
-        asset_content_type: application/octet-stream
-        
-    - name: Upload Bin to Release
-      uses: actions/upload-release-asset@v1
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: bin-input\*.zip
-        asset_name: Formula81.XrmToolBox.Tools.AuditGoggles.${{ needs.build.outputs.version }}.zip
-        asset_content_type: application/zip     
+        files: |
+          releaseartifacts/*.nupkg
+          releaseartifacts/*.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    

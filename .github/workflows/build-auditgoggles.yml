@@ -35,7 +35,7 @@ jobs:
     - name: Read version.json
       id: readversion
       run: |
-        $json = Get-Content '.\\Audit Goggles\\version.json' | ConvertFrom-Json
+        $json = Get-Content '.\\AuditGoggles\\version.json' | ConvertFrom-Json
         echo "MAJOR=$($json.major)" >> $env:GITHUB_ENV
         echo "MINOR=$($json.minor)" >> $env:GITHUB_ENV        
         
@@ -50,7 +50,7 @@ jobs:
         Write-Host "Generated version: $version"
         Write-Host "##[group]Setting assembly version to $version"
         # --- Update all AssemblyInfo.cs files ---
-        $files = Get-ChildItem -Path '.\\Audit Goggles' -Recurse -Include AssemblyInfo.cs
+        $files = Get-ChildItem -Path '.\\AuditGoggles' -Recurse -Include AssemblyInfo.cs
         foreach ($file in $files) {
           Write-Host "Updating: $($file.FullName)"
             (Get-Content $file) `
@@ -65,7 +65,7 @@ jobs:
             Write-Host "------"
         }
         # --- Update NuSpec version tags ---
-        $nuspecFiles = Get-ChildItem -Path '.\\Audit Goggles' -Recurse -Include *.nuspec
+        $nuspecFiles = Get-ChildItem -Path '.\\AuditGoggles' -Recurse -Include *.nuspec
         foreach ($nuspec in $nuspecFiles) {
           Write-Host "Updating NuSpec: $($nuspec.FullName)"
           (Get-Content $nuspec) `
@@ -98,7 +98,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Bin.Formula81.XrmToolBox.Tools.AuditGoggles.${{ env.VERSION }}
-        path: 'Audit Goggles\\bin\\Release\\Formula81*.dll'
+        path: 'AuditGoggles\\bin\\Release\\Formula81*.dll'
 
     - name: Upload nupkg artifact
       uses: actions/upload-artifact@v4

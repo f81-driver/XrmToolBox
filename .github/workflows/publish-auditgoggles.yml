@@ -1,0 +1,19 @@
+name: Audit Goggles - Publish & Release
+
+on:
+  workflow_dispatch:
+
+env:
+  NUGET_SOURCE: https://api.nuget.org/v3/index.json
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps: 
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v2
+
+    #- name: Publish to NuGet.org
+      #run: nuget push nupkg-input\*.nupkg -Source ${{ env.NUGET_SOURCE }} -ApiKey ${{ secrets.NUGET_API_KEY }} -SkipDuplicate
+
+       

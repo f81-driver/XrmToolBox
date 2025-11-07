@@ -1,21 +1,31 @@
-name: Build Audit Goggles Tool
+name: Audit Goggles - Build
 
 on:
   push:
     branches: [ "main" ]
+    paths-ignore:
+      - '.github/workflows/**'
   pull_request:
     branches: [ "main" ]
+    paths-ignore:
+      - '.github/workflows/**'    
+  # manual trigger      
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: "Create GitHub Release?"
+        required: true
+        default: "false"
+        type: boolean    
 
 jobs:
-
   build:
-
     strategy:
       matrix:
         configuration: [Release]
-
-    runs-on: windows-latest
-
+    runs-on: windows-latest 
+    outputs:
+      version: ${{ steps.outputversion.outputs.version }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -23,14 +33,14 @@ jobs:
         fetch-depth: 0
 
     - name: Read version.json
-      id: version
+      id: readversion
       run: |
         $json = Get-Content 'Tools\\Audit Goggles\\version.json' | ConvertFrom-Json
         echo "MAJOR=$($json.major)" >> $env:GITHUB_ENV
         echo "MINOR=$($json.minor)" >> $env:GITHUB_ENV        
         
     - name: Generate version
-      id: genver
+      id: generateversion
       shell: pwsh
       run: |
         $year = (Get-Date).ToString('yy')
@@ -95,3 +105,58 @@ jobs:
       with:
         name: Nupkg.Formula81.XrmToolBox.Tools.AuditGoggles.${{ env.VERSION }}
         path: nupkg-output\*.nupkg
+        zip: false
+
+    - name: Output VERSION to release
+      id: outputversion
+      run: echo "version=${{ env.VERSION }}" >> $env:GITHUB_OUTPUT
+        
+  release:
+    needs: build
+    runs-on: windows-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true' }}
+    permissions:
+      contents: write    
+    steps:
+    - name: Show version from build
+      run: echo "Releasing version ${{ needs.build.outputs.version }}"
+
+    - name: Download Nupkg Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: Nupkg.Formula81.XrmToolBox.Tools.AuditGoggles.${{ needs.build.outputs.version }}
+        path: releaseartifacts
+
+    - name: Download Bin Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: Bin.Formula81.XrmToolBox.Tools.AuditGoggles.${{ needs.build.outputs.version }}
+        path: releaseartifacts
+
+    - name: Zip binaries
+      run: Compress-Archive -Path "releaseartifacts/*.dll" -DestinationPath "releaseartifacts/Formula81.XrmToolBox.Tools.AuditGoggles.${{ needs.build.outputs.version }}.zip"
+      shell: pwsh        
+
+    # Optionally confirm what was downloaded
+    - name: List downloaded files
+      run: |
+        Write-Host "NuPkg files:"
+        Get-ChildItem -Path releaseartifacts -Recurse
+      shell: pwsh
+
+    # Create the GitHub Release and upload assets
+    - name: Create GitHub Release with assets
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ needs.build.outputs.version }}
+        name: Release ${{ needs.build.outputs.version }}
+        body: |
+          **Release:** ${{ needs.build.outputs.version }}
+          This release was manually triggered via workflow dispatch.
+        draft: false
+        prerelease: false
+        files: |
+          releaseartifacts/*.nupkg
+          releaseartifacts/*.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    

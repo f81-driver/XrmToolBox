@@ -17,13 +17,6 @@ jobs:
     environment: 'Nuget Publish'
     runs-on: windows-latest
     steps:
-      #- name: Checkout repository
-        #uses: actions/checkout@v4
-      - name: Test NugetApiKey
-        shell: pwsh
-        run: |
-          Write-Host "NuGet API Key length: $($env:NUGET_API_KEY.Length)"
-
       # Download the .nupkg from your release
       - name: Download release assets
         uses: robinraju/release-downloader@v1
@@ -37,8 +30,14 @@ jobs:
         run: Get-ChildItem -Path ./nupkg -Recurse
         shell: pwsh
 
-      - name: Publish to NuGet.org
+      - name: Publish NuGet package
         shell: pwsh
-        run: nuget push "./nupkg/*.nupkg" -ApiKey $env:NUGET_API_KEY -Source https://api.nuget.org/v3/index.json -SkipDuplicate
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          Write-Host "NuGet API Key length: $($env:NUGET_API_KEY.Length)"        
+          $files = Get-ChildItem -Path "./nupkg" -Filter "*.nupkg"
+          foreach ($f in $files) {
+            Write-Host "Publishing $($f.FullName)"
+            nuget push $f.FullName -ApiKey $env:NUGET_API_KEY -Source https://api.nuget.org/v3/index.json -SkipDuplicate
+          }

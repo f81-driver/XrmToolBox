@@ -20,11 +20,11 @@
     </dependencies>
   </metadata>
   <files>
-	<file src="Audit Goggles\bin\Release\Formula81.XrmToolBox.Libraries.Core.dll" target="lib\net481\Plugins" />
-	<file src="Audit Goggles\bin\Release\Formula81.XrmToolBox.Libraries.Json.dll" target="lib\net481\Plugins" />
-	<file src="Audit Goggles\bin\Release\Formula81.XrmToolBox.Libraries.Parts.dll" target="lib\net481\Plugins" />
-	<file src="Audit Goggles\bin\Release\Formula81.XrmToolBox.Libraries.Xrm.dll" target="lib\net481\Plugins" />
-	<file src="Audit Goggles\bin\Release\Formula81.XrmToolBox.Libraries.XrmParts.dll" target="lib\net481\Plugins" />
-	<file src="Audit Goggles\bin\Release\Formula81.XrmToolBox.Tools.AuditGoggles.dll" target="lib\net481\Plugins" />
+	<file src="bin\Release\Formula81.XrmToolBox.Libraries.Core.dll" target="lib\net481\Plugins" />
+	<file src="bin\Release\Formula81.XrmToolBox.Libraries.Json.dll" target="lib\net481\Plugins" />
+	<file src="bin\Release\Formula81.XrmToolBox.Libraries.Parts.dll" target="lib\net481\Plugins" />
+	<file src="bin\Release\Formula81.XrmToolBox.Libraries.Xrm.dll" target="lib\net481\Plugins" />
+	<file src="bin\Release\Formula81.XrmToolBox.Libraries.XrmParts.dll" target="lib\net481\Plugins" />
+	<file src="bin\Release\Formula81.XrmToolBox.Tools.AuditGoggles.dll" target="lib\net481\Plugins" />
   </files>
 </package>

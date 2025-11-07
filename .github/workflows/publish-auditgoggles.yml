@@ -2,11 +2,6 @@ name: Audit Goggles - Publish & Release
 
 on:
   workflow_dispatch:
-    inputs:
-      build_version:
-        description: "Version to publish (e.g. 1.0.25310.42)"
-        required: true
-        type: string
 
 env:
   NUGET_SOURCE: https://api.nuget.org/v3/index.json

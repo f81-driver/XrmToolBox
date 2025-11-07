@@ -23,7 +23,9 @@ jobs:
     strategy:
       matrix:
         configuration: [Release]
-    runs-on: windows-latest
+    runs-on: windows-latest 
+    outputs:
+      version: ${{ steps.outputversion.outputs.version }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -31,14 +33,14 @@ jobs:
         fetch-depth: 0
 
     - name: Read version.json
-      id: version
+      id: readversion
       run: |
         $json = Get-Content 'Tools\\Audit Goggles\\version.json' | ConvertFrom-Json
         echo "MAJOR=$($json.major)" >> $env:GITHUB_ENV
         echo "MINOR=$($json.minor)" >> $env:GITHUB_ENV        
         
     - name: Generate version
-      id: genver
+      id: generateversion
       shell: pwsh
       run: |
         $year = (Get-Date).ToString('yy')
@@ -105,17 +107,17 @@ jobs:
         path: nupkg-output\*.nupkg
         zip: false
 
-    - name: Pass VERSION to release
-      id: passversion
-      run: echo "::set-output name=version::${{ env.VERSION }}"
+    - name: Output VERSION to release
+      id: outputversion
+      run: echo "version=$VERSION" >> $GITHUB_OUTPUT
         
   release:
     needs: build
     runs-on: windows-latest
     if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true' }}
     steps:
-    - name: Use VERSION from buil
-      run: echo "Version is ${{ needs.build.outputs.version }} (env.Version = ${{ env.VERSION }})"
+    - name: Use VERSION from build
+      run: echo "Version is ${{ needs.build.outputs.version }}"
         
     - name: Download Nupkg Artifact
       uses: actions/download-artifact@v4

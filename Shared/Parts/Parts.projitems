@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>30f8afa0-4611-434c-8383-c0cc33e0af6b</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Parts</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Components\CheckableEnumItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Components\CheckableItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Components\ColorCombination.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Components\Rect.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\FilterInputControl.xaml.cs">
+      <DependentUpon>FilterInputControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\TimePicker.xaml.cs">
+      <DependentUpon>TimePicker.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Converters\ByteArrayToImageConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Converters\ColorToBrushConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Converters\UIElementSizeConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Events\FilterChangedEvent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Input\RelayCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\BitmapImageUtility.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\WindowUtility.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="$(MSBuildThisFileDirectory)Controls\FilterInputControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Controls\TimePicker.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+</Project>

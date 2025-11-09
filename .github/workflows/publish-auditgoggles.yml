@@ -1,0 +1,43 @@
+name: Audit Goggles - Publish NuGet
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Version tag to publish"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    environment: 'Nuget Publish'
+    runs-on: windows-latest
+    steps:
+      # Download the .nupkg from your release
+      - name: Download release assets
+        uses: robinraju/release-downloader@v1
+        with:
+          tag: ${{ github.event.inputs.tag_name }}
+          fileName: "*.nupkg"
+          out-file-path: ./nupkg
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: List downloaded packages
+        run: Get-ChildItem -Path ./nupkg -Recurse
+        shell: pwsh
+
+      - name: Publish NuGet package
+        shell: pwsh
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          Write-Host "NuGet API Key length: $($env:NUGET_API_KEY.Length)"        
+          $files = Get-ChildItem -Path "./nupkg" -Filter "*.nupkg"
+          foreach ($f in $files) {
+            Write-Host "Publishing $($f.FullName)"
+            nuget push $f.FullName -ApiKey $env:NUGET_API_KEY -Source https://api.nuget.org/v3/index.json -SkipDuplicate
+          }

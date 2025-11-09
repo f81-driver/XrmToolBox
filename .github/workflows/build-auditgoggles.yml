@@ -1,0 +1,162 @@
+name: Audit Goggles - Build
+
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - '.github/workflows/**'
+  pull_request:
+    branches: [ "main" ]
+    paths-ignore:
+      - '.github/workflows/**'    
+  # manual trigger      
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: "Create GitHub Release?"
+        required: true
+        default: "false"
+        type: boolean    
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        configuration: [Release]
+    runs-on: windows-latest 
+    outputs:
+      version: ${{ steps.outputversion.outputs.version }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Read version.json
+      id: readversion
+      run: |
+        $json = Get-Content '.\\AuditGoggles\\version.json' | ConvertFrom-Json
+        echo "MAJOR=$($json.major)" >> $env:GITHUB_ENV
+        echo "MINOR=$($json.minor)" >> $env:GITHUB_ENV        
+        
+    - name: Generate version
+      id: generateversion
+      shell: pwsh
+      run: |
+        $year = (Get-Date).ToString('yy')
+        $dayOfYear = (Get-Date).DayOfYear.ToString('000')
+        $revision = $env:GITHUB_RUN_NUMBER
+        $version = "$env:MAJOR.$env:MINOR.$year$dayOfYear.$revision"
+        Write-Host "Generated version: $version"
+        Write-Host "##[group]Setting assembly version to $version"
+        # --- Update all AssemblyInfo.cs files ---
+        $files = Get-ChildItem -Path '.\\AuditGoggles' -Recurse -Include AssemblyInfo.cs
+        foreach ($file in $files) {
+          Write-Host "Updating: $($file.FullName)"
+            (Get-Content $file) `
+              -replace 'AssemblyVersion\(".*"\)', "AssemblyVersion(`"$version`")" `
+              -replace 'AssemblyFileVersion\(".*"\)', "AssemblyFileVersion(`"$version`")" `
+              -replace 'AssemblyInformationalVersion\(".*"\)', "AssemblyInformationalVersion(`"$version`")" `
+            | Set-Content $file
+
+            # Verify change and output matching lines to log
+            $updatedLines = Select-String -Path $file.FullName -Pattern 'Assembly.*Version'
+            $updatedLines | ForEach-Object { Write-Host "→ $($_.Line)" }
+            Write-Host "------"
+        }
+        # --- Update NuSpec version tags ---
+        $nuspecFiles = Get-ChildItem -Path '.\\AuditGoggles' -Recurse -Include *.nuspec
+        foreach ($nuspec in $nuspecFiles) {
+          Write-Host "Updating NuSpec: $($nuspec.FullName)"
+          (Get-Content $nuspec) `
+            -replace '<version>.*?</version>', "<version>$version</version>" `
+            | Set-Content $nuspec
+          # Log confirmation
+          $updatedLine = Select-String -Path $nuspec.FullName -Pattern '<version>'
+          Write-Host "→ $($updatedLine.Line)"
+          Write-Host "------"
+        }
+        Write-Host "##[endgroup]"
+        "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v2
+
+    - name: Restore NuGet packages
+      run: nuget restore AuditGoggles/AuditGoggles.csproj
+
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v2      
+
+    - name: Build
+      run: msbuild AuditGoggles/AuditGoggles.csproj /p:Configuration=Release
+
+    - name: Pack NuGet package
+      run: nuget pack AuditGoggles/AuditGoggles.nuspec -OutputDirectory nupkg-output -Version ${{ env.VERSION }}      
+   
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Bin.Formula81.XrmToolBox.Tools.AuditGoggles.${{ env.VERSION }}
+        path: 'AuditGoggles\\bin\\Release\\Formula81*.dll'
+
+    - name: Upload nupkg artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Nupkg.Formula81.XrmToolBox.Tools.AuditGoggles.${{ env.VERSION }}
+        path: nupkg-output\*.nupkg
+        zip: false
+
+    - name: Output VERSION to release
+      id: outputversion
+      run: echo "version=${{ env.VERSION }}" >> $env:GITHUB_OUTPUT
+        
+  release:
+    needs: build
+    runs-on: windows-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true' }}
+    permissions:
+      contents: write    
+    steps:
+    - name: Show version from build
+      run: echo "Releasing version ${{ needs.build.outputs.version }}"
+
+    - name: Download Nupkg Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: Nupkg.Formula81.XrmToolBox.Tools.AuditGoggles.${{ needs.build.outputs.version }}
+        path: releaseartifacts
+
+    - name: Download Bin Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: Bin.Formula81.XrmToolBox.Tools.AuditGoggles.${{ needs.build.outputs.version }}
+        path: releaseartifacts
+
+    - name: Zip binaries
+      run: Compress-Archive -Path "releaseartifacts/*.dll" -DestinationPath "releaseartifacts/Formula81.XrmToolBox.Tools.AuditGoggles.${{ needs.build.outputs.version }}.zip"
+      shell: pwsh        
+
+    # Optionally confirm what was downloaded
+    - name: List downloaded files
+      run: |
+        Write-Host "NuPkg files:"
+        Get-ChildItem -Path releaseartifacts -Recurse
+      shell: pwsh
+
+    # Create the GitHub Release and upload assets
+    - name: Create GitHub Release with assets
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ needs.build.outputs.version }}
+        name: Release ${{ needs.build.outputs.version }}
+        body: |
+          **Release:** ${{ needs.build.outputs.version }}
+          This release was manually triggered via workflow dispatch.
+        draft: false
+        prerelease: false
+        files: |
+          releaseartifacts/*.nupkg
+          releaseartifacts/*.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    

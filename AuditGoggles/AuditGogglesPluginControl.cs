@@ -187,7 +187,8 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
                 Work = (backgroundWorker, doWorkEventArgs) =>
                 {
                     var entityMetadatas = ServiceClient.GetAllEntityMetadata()
-                        .Where(em => em.IsValidForAdvancedFind ?? false);
+                        //.Where(em => em.IsValidForAdvancedFind ?? false);
+                        .Where(em => em.IsAuditEnabled?.Value ?? false);
                     var entityIconDatas = EntityIconCache.Instance.GetMany(entityMetadatas);
                     doWorkEventArgs.Result = entityMetadatas
                         .Select(em => new AuditEntity(em.ObjectTypeCode,
@@ -399,10 +400,11 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
             return auditRecordList;
         }
 
-        private IEnumerable<Audit> RetrieveAudits(IEnumerable<EntityAuditConditionPair> entityAuditConditionPairs, IEnumerable<ConditionExpression> criteriaConditions/*, IEnumerable<int> attributeMasks*/, OrderType orderType, PagingInfo pageInfo, out string pagingCookie, out bool moreRecords)
+        private IEnumerable<Audit> RetrieveAudits(IEnumerable<EntityAuditConditionPair> entityAuditConditionPairs, IEnumerable<ConditionExpression> criteriaConditions, OrderType orderType, PagingInfo pageInfo, out string pagingCookie, out bool moreRecords)
         {
             if (entityAuditConditionPairs?.Any() ?? false)
             {
+                pageInfo.ReturnTotalRecordCount = true;
                 var query = new QueryExpression(Audit.EntityLogicalName)
                 {
                     ColumnSet = new ColumnSet(Audit.ColumnNames.AuditId,

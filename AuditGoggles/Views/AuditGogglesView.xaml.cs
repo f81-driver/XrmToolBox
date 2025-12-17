@@ -77,11 +77,14 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Views
 
         private void EntityAuditListView_ScrollChanged(object sender, ScrollChangedEventArgs scrollChangedEventArgs)
         {
-            if (_scrollViewer == null)
+            if (scrollChangedEventArgs.VerticalChange > 0)
             {
-                _scrollViewer = scrollChangedEventArgs.OriginalSource as ScrollViewer;
+                if (_scrollViewer == null)
+                {
+                    _scrollViewer = scrollChangedEventArgs.OriginalSource as ScrollViewer;
+                }
+                EntityAuditViewModel?.ScrollChangedCommand.Execute(scrollChangedEventArgs);
             }
-            EntityAuditViewModel?.ScrollChangedCommand.Execute(scrollChangedEventArgs);
         }
 
         private void AuditRecordViewModel_AuditRecordsChanged()

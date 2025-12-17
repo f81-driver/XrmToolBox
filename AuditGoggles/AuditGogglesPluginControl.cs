@@ -4,6 +4,7 @@ using Formula81.XrmToolBox.Shared.Parts.Utilities;
 using Formula81.XrmToolBox.Shared.Xrm;
 using Formula81.XrmToolBox.Shared.Xrm.Caches;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Caches;
+using Formula81.XrmToolBox.Tools.AuditGoggles.Components;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Exceptions;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Helpers;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Models;
@@ -258,73 +259,84 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
             });
         }
 
-        internal void LoadEntityAuditsAsync(IEnumerable<ConditionExpression> criteriaConditions, IDictionary<string, ColumnSet> columns, OrderType orderType)
+        internal void LoadEntityAuditsAsync(IEnumerable<ConditionExpression> criteriaConditions, IDictionary<string, ColumnSet> columns, PagingInfo pageInfo, OrderType orderType)
         {
             const string message = "Loading Entity Audits";
-            IsBusy = true;
             var auditRecords = _auditGogglesView.AuditRecordViewModel.AuditRecords;
-            WorkAsync(new WorkAsyncInfo
+            if (auditRecords.Any())
             {
-                Message = message,
-                Work = (backgroundWorker, doWorkEventArgs) =>
+                IsBusy = true;
+                WorkAsync(new WorkAsyncInfo
                 {
-                    var colorCombos = auditRecords.ToDictionary(ar => ar.Id, ar => ar.ColorCombination);
-                    var auditList = new List<Audit>();
-
-                    var data = new Dictionary<string, Dictionary<Guid, Entity>>();
-                    var entityMetadatas = new Dictionary<string, EntityMetadata>();
-                    var auditRecordGroups = auditRecords.GroupBy(er => er.EntityLogicalName, er => er.Id);
-                    foreach (var auditRecordGroup in auditRecordGroups)
+                    Message = message,
+                    Work = (backgroundWorker, doWorkEventArgs) =>
                     {
-                        var entityMetadata = ServiceClient.GetEntityMetadata(auditRecordGroup.Key, EntityFilters.Attributes);
-                        entityMetadatas[auditRecordGroup.Key] = entityMetadata;
+                        var colorCombos = auditRecords.ToDictionary(ar => ar.Id, ar => ar.ColorCombination);
+                        var auditList = new List<Audit>();
 
-                        var entities = RetrieveEntities(entityMetadata, auditRecordGroup.Select(g => g), EntityAuditHelper.GetEntityAuditEntityColumns(entityMetadata));
-                        data[auditRecordGroup.Key] = entities.ToDictionary(e => e.Id, e => e);
-                        EntityNameCache.Instance.Upsert(auditRecordGroup.Key, entities.ToDictionary(e => e.Id, e => e.GetAttributeValue<string>(entityMetadata.PrimaryNameAttribute)));
-
-                        if (entityMetadata?.IsAuditEnabled?.Value ?? false)
+                        var entityAuditConditionList = new List<EntityAuditConditionPair>();
+                        var data = new Dictionary<string, Dictionary<Guid, Entity>>();
+                        var entityMetadatas = new Dictionary<string, EntityMetadata>();
+                        var auditRecordGroups = auditRecords.GroupBy(er => er.EntityLogicalName, er => er.Id);
+                        foreach (var auditRecordGroup in auditRecordGroups)
                         {
-                            var attributes = entityMetadata.Attributes.Where(am => am.ColumnNumber.HasValue)
-                                .ToDictionary(am => am.LogicalName, am => am.ColumnNumber.Value);
-                            var columnSet = (columns?.TryGetValue(entityMetadata.LogicalName, out var cs) ?? false) ? cs : null;
-                            var attributeMasks = columnSet?.Columns?.Select(c => attributes.TryGetValue(c, out var mask) ? (int?)mask : null)
-                                .Where(m => m.HasValue)
-                                .Select(m => m.Value);
-                            auditList.AddRange(RetrieveAudits(auditRecordGroup, criteriaConditions, attributeMasks, orderType));
-                        }
-                    }
-                    var entityAuditHelper = new EntityAuditHelper(ServiceClient);
-                    var entityAudits = auditList.Select(a => entityAuditHelper.ParseAudit(a,
-                                data[a.ObjectId.LogicalName][a.ObjectId.Id],
-                                entityMetadatas[a.ObjectId.LogicalName],
-                                (columns?.TryGetValue(a.ObjectId.LogicalName, out var columnSet) ?? false) ? columnSet : null,
-                                colorCombos[a.ObjectId.Id]));
-                    var defaultEntityAudits = auditRecordGroups.Where(g => !(entityMetadatas[g.Key]?.IsAuditEnabled?.Value ?? false))
-                            .SelectMany(g => g.SelectMany(i => entityAuditHelper.GetDefaultEntityAudits(data[g.Key][i], entityMetadatas[g.Key], colorCombos[i])
-                                .Where(ea => EntityAuditHelper.CheckChangedDate(ea, criteriaConditions))));
+                            var entityMetadata = ServiceClient.GetEntityMetadata(auditRecordGroup.Key, EntityFilters.Attributes);
+                            entityMetadatas[auditRecordGroup.Key] = entityMetadata;
 
-                    doWorkEventArgs.Result = entityAudits.Where(ea => ea != null)
-                        .Concat(defaultEntityAudits)
-                        .ToList();
-                },
-                PostWorkCallBack = runWorkerCompletedEventArgs =>
-                {
-                    try
+                            var entities = RetrieveEntities(entityMetadata, auditRecordGroup.Select(g => g), EntityAuditHelper.GetEntityAuditEntityColumns(entityMetadata));
+                            data[auditRecordGroup.Key] = entities.ToDictionary(e => e.Id, e => e);
+                            EntityNameCache.Instance.Upsert(auditRecordGroup.Key, entities.ToDictionary(e => e.Id, e => e.GetAttributeValue<string>(entityMetadata.PrimaryNameAttribute)));
+
+                            if (entityMetadata?.IsAuditEnabled?.Value ?? false)
+                            {
+                                var attributes = entityMetadata.Attributes.Where(am => am.ColumnNumber.HasValue)
+                                    .ToDictionary(am => am.LogicalName, am => am.ColumnNumber.Value);
+                                var columnSet = (columns?.TryGetValue(entityMetadata.LogicalName, out var cs) ?? false) ? cs : null;
+                                var attributeMasks = columnSet?.Columns?.Select(c => attributes.TryGetValue(c, out var mask) ? (int?)mask : null)
+                                    .Where(m => m.HasValue)
+                                    .Select(m => m.Value) ?? Enumerable.Empty<int>();
+                                entityAuditConditionList.Add(new EntityAuditConditionPair(auditRecordGroup, attributeMasks));
+                            }
+                        }
+
+                        auditList.AddRange(RetrieveAudits(entityAuditConditionList, criteriaConditions, orderType, pageInfo, out var pagingCookie, out var moreRecords));
+                        var entityAuditHelper = new EntityAuditHelper(ServiceClient);
+                        var entityAudits = auditList.Select(a => entityAuditHelper.ParseAudit(a,
+                                    data[a.ObjectId.LogicalName][a.ObjectId.Id],
+                                    entityMetadatas[a.ObjectId.LogicalName],
+                                    (columns?.TryGetValue(a.ObjectId.LogicalName, out var columnSet) ?? false) ? columnSet : null,
+                                    colorCombos[a.ObjectId.Id]));
+                        /*var defaultEntityAudits = auditRecordGroups.Where(g => !(entityMetadatas[g.Key]?.IsAuditEnabled?.Value ?? false))
+                                .SelectMany(g => g.SelectMany(i => entityAuditHelper.GetDefaultEntityAudits(data[g.Key][i], entityMetadatas[g.Key], colorCombos[i])
+                                    .Where(ea => EntityAuditHelper.CheckChangedDate(ea, criteriaConditions))));*/
+
+                        doWorkEventArgs.Result = new EntityAuditResult(entityAudits.Where(ea => ea != null)
+                            /*.Concat(defaultEntityAudits)*/
+                            .ToList(), pagingCookie, moreRecords);
+                    },
+                    PostWorkCallBack = runWorkerCompletedEventArgs =>
                     {
-                        runWorkerCompletedEventArgs.ThrowIfError();
-                        _auditGogglesView.EntityAuditViewModel.SetSource(runWorkerCompletedEventArgs.Result as IEnumerable<EntityAudit>);
-                    }
-                    catch (Exception exception)
-                    {
-                        ShowErrorDialog(exception, message);
-                    }
-                    finally
-                    {
-                        IsBusy = false;
-                    }
-                },
-            });
+                        try
+                        {
+                            runWorkerCompletedEventArgs.ThrowIfError();
+                            var result = runWorkerCompletedEventArgs.Result as EntityAuditResult;
+                            _auditGogglesView.EntityAuditViewModel.ApplyEntityAuditResult(result.EntityAudits, result.PagingCookie, result.MoreRecords);
+                        }
+                        catch (Exception exception)
+                        {
+                            ShowErrorDialog(exception, message);
+                        }
+                        finally
+                        {
+                            IsBusy = false;
+                        }
+                    },
+                });
+            }
+            else
+            {
+                _auditGogglesView.EntityAuditViewModel.ApplyEntityAuditResult(Enumerable.Empty<EntityAudit>(), null, true);
+            }
         }
 
         public override void ClosingPlugin(PluginCloseInfo info)
@@ -387,10 +399,9 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
             return auditRecordList;
         }
 
-        private IEnumerable<Audit> RetrieveAudits(IEnumerable<Guid> objectIds, IEnumerable<ConditionExpression> criteriaConditions, IEnumerable<int> attributeMasks, OrderType orderType)
+        private IEnumerable<Audit> RetrieveAudits(IEnumerable<EntityAuditConditionPair> entityAuditConditionPairs, IEnumerable<ConditionExpression> criteriaConditions/*, IEnumerable<int> attributeMasks*/, OrderType orderType, PagingInfo pageInfo, out string pagingCookie, out bool moreRecords)
         {
-            var auditList = new List<Audit>();
-            if (objectIds?.Any() ?? false)
+            if (entityAuditConditionPairs?.Any() ?? false)
             {
                 var query = new QueryExpression(Audit.EntityLogicalName)
                 {
@@ -404,44 +415,41 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
                         Audit.ColumnNames.Operation,
                         Audit.ColumnNames.UserId),
                     Criteria =
+                    {
+                        Conditions =
                         {
-                            Conditions =
-                            {
-                                new ConditionExpression(Audit.ColumnNames.ObjectId, ConditionOperator.In, objectIds.ToArray()),
-                                new ConditionExpression(Audit.ColumnNames.Operation, ConditionOperator.In, EntityAuditHelper.SupportedAuditOperationValues)
-                            }
+                            new ConditionExpression(Audit.ColumnNames.Operation, ConditionOperator.In, EntityAuditHelper.SupportedAuditOperationValues)
                         },
+                    },
                     Orders = { new OrderExpression(Audit.ColumnNames.CreatedOn, orderType) },
-                    PageInfo = new PagingInfo { Count = 5000, PageNumber = 1 }
+                    PageInfo = pageInfo
                 };
+                var objectFilter = query.Criteria.AddFilter(LogicalOperator.Or);
+                foreach (var entityAuditConditionPair in entityAuditConditionPairs)
+                {
+                    var fitler = objectFilter.AddFilter(LogicalOperator.And);
+                    fitler.AddCondition(new ConditionExpression(Audit.ColumnNames.ObjectId, ConditionOperator.In, entityAuditConditionPair.ObjectIds.ToArray()));
+                    foreach (var attributeMask in entityAuditConditionPair.AttributeMasks)
+                    {
+                        fitler.AddCondition(new ConditionExpression(Audit.ColumnNames.AttributeMask, ConditionOperator.Like, attributeMask));
+                    }
+                }
+
                 if (criteriaConditions?.Any() ?? false)
                 {
                     query.Criteria.Conditions.AddRange(criteriaConditions);
                 }
-                if (attributeMasks?.Any() ?? false)
-                {
-                    var attributeMaskFilter = query.Criteria.AddFilter(LogicalOperator.Or);
-                    foreach (var attributeMask in attributeMasks)
-                    {
-                        attributeMaskFilter.AddCondition(new ConditionExpression(Audit.ColumnNames.AttributeMask, ConditionOperator.Like, attributeMask));
-                    }
-                }
-                while (true)
-                {
-                    var result = Service.RetrieveMultiple(query);
-                    auditList.AddRange(result.Entities.Select(e => e.ToEntity<Audit>()));
-                    if (result.MoreRecords)
-                    {
-                        query.PageInfo.PageNumber++;
-                        query.PageInfo.PagingCookie = result.PagingCookie;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
+
+                var results = Service.RetrieveMultiple(query);
+                pagingCookie = results.PagingCookie;
+                moreRecords = results.MoreRecords;
+                return results.Entities
+                    .Select(e => e.ToEntity<Audit>())
+                    .ToList();
             }
-            return auditList;
+            pagingCookie = null;
+            moreRecords = false;
+            return Enumerable.Empty<Audit>();
         }
 
         private IEnumerable<Entity> RetrieveEntities(EntityMetadata entityMetadata, IEnumerable<Guid> ids, params string[] columns)

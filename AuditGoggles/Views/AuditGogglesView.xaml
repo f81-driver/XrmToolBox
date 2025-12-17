@@ -58,6 +58,30 @@
                     </Button.Content>
                 </Button>
             </DataTemplate>
+
+            <Style x:Key="AttentionButtonStyle" TargetType="Button">
+                <Setter Property="BorderThickness" Value="2"/>
+                <Setter Property="BorderBrush">
+                    <Setter.Value>
+                        <SolidColorBrush Color="Transparent"/>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsLoadRequired}" Value="True">
+                        <DataTrigger.EnterActions>
+                            <BeginStoryboard x:Name="AttentionStoryboard">
+                                <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                    <ColorAnimation Storyboard.TargetProperty="(BorderBrush).(SolidColorBrush.Color)"
+                                                    From="Transparent" To="Orange" Duration="0:0:0.7"/>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </DataTrigger.EnterActions>
+                        <DataTrigger.ExitActions>
+                            <StopStoryboard BeginStoryboardName="AttentionStoryboard"/>
+                        </DataTrigger.ExitActions>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
         </ResourceDictionary>
     </UserControl.Resources>
     <DockPanel>
@@ -192,7 +216,8 @@
             <GridSplitter Grid.Column="3" Grid.Row="2" HorizontalAlignment="Stretch"/>
             <ToolBarTray Grid.Column="3" Grid.Row="3" IsLocked="True">
                 <ToolBar DataContext="{Binding EntityAuditViewModel, ElementName=AuditGogglesViewRoot}">
-                    <Button x:Name="LoadEntityAuditsButton">
+                    <Button x:Name="LoadEntityAuditsButton"
+                            Style="{StaticResource AttentionButtonStyle}">
                         <WrapPanel>
                             <Image Source="/Formula81.XrmToolBox.Tools.AuditGoggles;component/Resources/Images/progress-download.png" Width="24" />
                             <Label Content="Load Audits" />
@@ -233,8 +258,13 @@
             <ListView x:Name="EntityAuditListView" Grid.Column="3" Grid.Row="4"
                       AlternationCount="2"
                       ScrollViewer.CanContentScroll="False" SelectionMode="Single"
+                      ScrollViewer.ScrollChanged="EntityAuditListView_ScrollChanged"
+                      VirtualizingPanel.IsVirtualizing="True"
+                      VirtualizingPanel.VirtualizationMode="Recycling"
+                      ScrollViewer.IsDeferredScrollingEnabled="True"                      
                       DataContext="{Binding EntityAuditViewModel, ElementName=AuditGogglesViewRoot, Mode=OneTime}"
-                      ItemsSource="{Binding EntityAuditsViewSource}">
+                      ItemsSource="{Binding EntityAudits}"
+                      IsEnabled="{Binding IsInitiated}">
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
                         <Setter Property="BorderThickness" Value="4,0,0,2" />

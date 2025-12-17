@@ -21,9 +21,8 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         private readonly ObservableCollection<AuditRecord> _auditRecordCollection;
         private readonly HashSet<Guid> _auditRecordIdSet;
 
-        private int AuditRecordCount { get => _auditRecordCollection.Count; }
-
         public IEnumerable<AuditRecord> AuditRecords { get => _auditRecordCollection; }
+        private int AuditRecordCount { get => _auditRecordCollection.Count; }
         public bool IsEmpty { get => (_auditRecordCollection?.Count ?? 0) > 0; }
 
         public ICommand AddCommand { get; }
@@ -33,6 +32,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         public ICommand RemoveCommand { get; }
 
         public event AuditRecordColorChangedEvent ColorChanged;
+        public event AuditRecordsChangedEvent AuditRecordsChanged;
 
         public AuditRecordViewModel(AuditGogglesPluginControl auditGogglesPluginControl)
         {
@@ -220,6 +220,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
                     }
                 }
             }
+            AuditRecordsChanged?.Invoke();
         }
 
         private void AuditRecord_PropertyChanged(object sender, PropertyChangedEventArgs e)

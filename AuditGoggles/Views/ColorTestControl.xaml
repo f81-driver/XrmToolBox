@@ -9,10 +9,39 @@
              xmlns:f81partsconverters ="clr-namespace:Formula81.XrmToolBox.Shared.Parts.Converters"
              mc:Ignorable="d" d:DesignHeight="450" d:DesignWidth="800" d:Background="White">
     <UserControl.Resources>
-        <f81xrmpartsconverters:IIconifiableToImageConverter x:Key="IIconifiableToImageConverter"/>
-        <f81partsconverters:ColorToBrushConverter x:Key="ColorToBrushConverter" />
+        <ResourceDictionary>
+            <f81xrmpartsconverters:IIconifiableToImageConverter x:Key="IIconifiableToImageConverter"/>
+            <f81partsconverters:ColorToBrushConverter x:Key="ColorToBrushConverter" />
+
+            <Style x:Key="DesignAttentionButtonStyle" TargetType="Button">
+                <Setter Property="BorderThickness" Value="2"/>
+                <Setter Property="BorderBrush">
+                    <Setter.Value>
+                        <SolidColorBrush Color="Orange"/>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <!-- EventTrigger to start animation on Loaded -->
+                    <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                        <BeginStoryboard>
+                            <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                <ColorAnimation Storyboard.TargetProperty="(BorderBrush).(SolidColorBrush.Color)"
+                                                    From="Orange" To="Transparent" Duration="0:0:0.6"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Style.Triggers>
+            </Style>
+        </ResourceDictionary>
     </UserControl.Resources>
-    <ItemsControl x:Name="AuditRecordItemsControl" Grid.Column="2" Grid.RowSpan="2" Background="LightGray"
+    <DockPanel>
+        <ToolBar DockPanel.Dock="Top">
+            <Button Content="Continue"
+                Width="120"
+                Height="30"
+                Style="{StaticResource DesignAttentionButtonStyle}" />
+        </ToolBar>
+        <ItemsControl x:Name="AuditRecordItemsControl" Grid.Column="2" Grid.RowSpan="2" Background="LightGray"
               ScrollViewer.HorizontalScrollBarVisibility="Auto"
               ScrollViewer.VerticalScrollBarVisibility="Hidden"
               ItemsSource="{Binding AuditRecordCollection, ElementName=AuditGogglesViewRoot, Mode=OneTime}">
@@ -45,4 +74,5 @@
             <localmocks:ColorTestItemsSource />
         </d:ItemsControl.ItemsSource>
     </ItemsControl>
+    </DockPanel>
 </UserControl>

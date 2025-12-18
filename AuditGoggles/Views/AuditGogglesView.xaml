@@ -112,11 +112,10 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="3" />
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <Grid x:Name="AuditEntityGrid" Grid.RowSpan="5" Background="Gray"
+            <Grid x:Name="AuditEntityGrid" Grid.RowSpan="4" Background="Gray"
                   DataContext="{Binding AuditEntityViewModel, ElementName=AuditGogglesViewRoot, Mode=OneTime}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="24" />
@@ -147,7 +146,7 @@
                 </ScrollViewer>
             </Grid>
 
-            <GridSplitter Grid.Column="1" Grid.RowSpan="5" HorizontalAlignment="Stretch" />
+            <GridSplitter Grid.Column="1" Grid.RowSpan="4" HorizontalAlignment="Stretch" />
 
             <ToolBarTray Grid.Column="3" IsLocked="True">
                 <ToolBar>
@@ -214,165 +213,174 @@
                 </d:ItemsControl.ItemsSource>
             </ItemsControl>
             <GridSplitter Grid.Column="3" Grid.Row="2" HorizontalAlignment="Stretch"/>
-            <ToolBarTray Grid.Column="3" Grid.Row="3" IsLocked="True">
-                <ToolBar DataContext="{Binding EntityAuditViewModel, ElementName=AuditGogglesViewRoot}">
-                    <Button x:Name="LoadEntityAuditsButton"
-                            Style="{StaticResource AttentionButtonStyle}">
-                        <WrapPanel>
-                            <Image Source="/Formula81.XrmToolBox.Tools.AuditGoggles;component/Resources/Images/progress-download.png" Width="24" />
-                            <Label Content="Load Audits" />
-                        </WrapPanel>
-                    </Button>
-                    <Separator />
-                    <Label Content="Sort" Margin="0,2,0,0" />
-                    <ComboBox x:Name="EntityAuditSortComboBox" Width="100" VerticalAlignment="Stretch" Margin="2,4,2,4"
-                              SelectedItem="{Binding SortDirection}" />
-                    <Button x:Name="EditEntityAuditFiltersButton">
-                        <WrapPanel>
-                            <Image Source="/Formula81.XrmToolBox.Tools.AuditGoggles;component/Resources/Images/filter.png" Width="24" />
-                            <Label Content="Edit Filters" />
-                            <Border Width="18" Height="18" Background="Red" CornerRadius="9" Margin="0,-5,-5,0"
-                                    HorizontalAlignment="Right" VerticalAlignment="Top" 
-                                    Visibility="{Binding HasFilters, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                <TextBlock Foreground="White" FontWeight="Bold" FontSize="11" 
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                                           Text="{Binding FilterCount}" />
-                            </Border>
-                        </WrapPanel>
-                    </Button>
-                    <Button x:Name="EditEntityAuditColumnsButton">
-                        <WrapPanel>
-                            <Image Source="/Formula81.XrmToolBox.Tools.AuditGoggles;component/Resources/Images/columns.png" Width="24" />
-                            <Label Content="Edit Columns" />
-                            <Border Width="18" Height="18" Background="Red" CornerRadius="9" Margin="0,-5,-5,0"
-                                    HorizontalAlignment="Right" VerticalAlignment="Top" 
-                                    Visibility="{Binding HasColumns, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                <TextBlock Foreground="White" FontWeight="Bold" FontSize="11" 
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                                           Text="{Binding ColumnCount}" />
-                            </Border>
-                        </WrapPanel>
-                    </Button>
-                </ToolBar>
-            </ToolBarTray>
-            <ListView x:Name="EntityAuditListView" Grid.Column="3" Grid.Row="4"
-                      AlternationCount="2"
-                      ScrollViewer.CanContentScroll="False" SelectionMode="Single"
-                      ScrollViewer.ScrollChanged="EntityAuditListView_ScrollChanged"
-                      VirtualizingPanel.IsVirtualizing="True"
-                      VirtualizingPanel.VirtualizationMode="Recycling"
-                      ScrollViewer.IsDeferredScrollingEnabled="True"                      
-                      DataContext="{Binding EntityAuditViewModel, ElementName=AuditGogglesViewRoot, Mode=OneTime}"
-                      ItemsSource="{Binding EntityAudits}"
-                      IsEnabled="{Binding IsInitiated}">
-                <ListView.ItemContainerStyle>
-                    <Style TargetType="ListViewItem">
-                        <Setter Property="BorderThickness" Value="4,0,0,2" />
-                        <Setter Property="BorderBrush" Value="{Binding ColorCombination.PrimaryBackground, Converter={StaticResource ColorToBrushConverter}}" />
-                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                        <Setter Property="VerticalContentAlignment" Value="Stretch" />
-                        <Style.Triggers>
-                            <Trigger Property="ItemsControl.AlternationIndex" Value="0">
-                                <Setter Property="Background" Value="White" />
-                            </Trigger>
-                            <Trigger Property="ItemsControl.AlternationIndex" Value="1">
-                                <Setter Property="Background" Value="#F0F0F0" />
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </ListView.ItemContainerStyle>
-                <ListView.View>
-                    <GridView>
-                        <GridView.Columns>
-                            <GridViewColumn Header="Changed Date"
-                                            Width="{Binding ActualWidth, ElementName=EntityAuditListView, Converter={StaticResource UIElementSizeConverter}, ConverterParameter=8*}" >
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate DataType="localmodels:EntityAudit">
-                                        <TextBlock Text="{Binding ChangedDate, StringFormat=G}" />
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                            <GridViewColumn Header="Changed By"
+            <DockPanel Grid.Column="3" Grid.Row="3"
+                       DataContext="{Binding EntityAuditViewModel, ElementName=AuditGogglesViewRoot, Mode=OneTime}">
+                <ToolBarTray DockPanel.Dock="Top" IsLocked="True">
+                    <ToolBar>
+                        <Button x:Name="LoadEntityAuditsButton"
+                                Style="{StaticResource AttentionButtonStyle}">
+                            <WrapPanel>
+                                <Image Source="/Formula81.XrmToolBox.Tools.AuditGoggles;component/Resources/Images/progress-download.png" Width="24" />
+                                <Label Content="Load Audits" />
+                            </WrapPanel>
+                        </Button>
+                        <Separator />
+                        <Label Content="Sort" Margin="0,2,0,0" />
+                        <ComboBox x:Name="EntityAuditSortComboBox" Width="100" VerticalAlignment="Stretch" Margin="2,4,2,4"
+                                  SelectedItem="{Binding SortDirection}" />
+                        <Button x:Name="EditEntityAuditFiltersButton">
+                            <WrapPanel>
+                                <Image Source="/Formula81.XrmToolBox.Tools.AuditGoggles;component/Resources/Images/filter.png" Width="24" />
+                                <Label Content="Edit Filters" />
+                                <Border Width="18" Height="18" Background="Red" CornerRadius="9" Margin="0,-5,-5,0"
+                                        HorizontalAlignment="Right" VerticalAlignment="Top" 
+                                        Visibility="{Binding HasFilters, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <TextBlock Foreground="White" FontWeight="Bold" FontSize="11" 
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Text="{Binding FilterCount}" />
+                                </Border>
+                            </WrapPanel>
+                        </Button>
+                        <Button x:Name="EditEntityAuditColumnsButton">
+                            <WrapPanel>
+                                <Image Source="/Formula81.XrmToolBox.Tools.AuditGoggles;component/Resources/Images/columns.png" Width="24" />
+                                <Label Content="Edit Columns" />
+                                <Border Width="18" Height="18" Background="Red" CornerRadius="9" Margin="0,-5,-5,0"
+                                        HorizontalAlignment="Right" VerticalAlignment="Top" 
+                                        Visibility="{Binding HasColumns, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <TextBlock Foreground="White" FontWeight="Bold" FontSize="11" 
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Text="{Binding ColumnCount}" />
+                                </Border>
+                            </WrapPanel>
+                        </Button>
+                    </ToolBar>
+                </ToolBarTray>
+                <StatusBar DockPanel.Dock="Bottom">
+                    <StatusBarItem HorizontalContentAlignment="Right">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="EntityAuditCountTextBlock" Text="{Binding Count, Mode=OneWay}" />
+                            <TextBlock Text=" / " />
+                            <TextBlock x:Name="EntityAuditTotalTextBlock" Text="{Binding Total, Mode=OneWay}" />
+                        </StackPanel>
+                    </StatusBarItem>
+                </StatusBar>
+                <ListView x:Name="EntityAuditListView" 
+                          AlternationCount="2"
+                          ScrollViewer.CanContentScroll="False" SelectionMode="Single"
+                          ScrollViewer.ScrollChanged="EntityAuditListView_ScrollChanged"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.VirtualizationMode="Recycling"
+                          ScrollViewer.IsDeferredScrollingEnabled="True"
+                          ItemsSource="{Binding EntityAudits}"
+                          IsEnabled="{Binding IsInitiated}">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="BorderThickness" Value="4,0,0,2" />
+                            <Setter Property="BorderBrush" Value="{Binding ColorCombination.PrimaryBackground, Converter={StaticResource ColorToBrushConverter}}" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                            <Style.Triggers>
+                                <Trigger Property="ItemsControl.AlternationIndex" Value="0">
+                                    <Setter Property="Background" Value="White" />
+                                </Trigger>
+                                <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                                    <Setter Property="Background" Value="#F0F0F0" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.View>
+                        <GridView>
+                            <GridView.Columns>
+                                <GridViewColumn Header="Changed Date"
+                                                Width="{Binding ActualWidth, ElementName=EntityAuditListView, Converter={StaticResource UIElementSizeConverter}, ConverterParameter=8*}" >
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate DataType="localmodels:EntityAudit">
+                                            <TextBlock Text="{Binding ChangedDate, StringFormat=G}" />
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Changed By"
                                                 Width="{Binding ActualWidth, ElementName=EntityAuditListView, Converter={StaticResource UIElementSizeConverter}, ConverterParameter=8*}">
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate DataType="localmodels:EntityAudit">
-                                        <TextBlock Text="{Binding ChangedByName}" />
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                            <GridViewColumn Header="Record"
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate DataType="localmodels:EntityAudit">
+                                            <TextBlock Text="{Binding ChangedByName}" />
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Record"
                                                 Width="{Binding ActualWidth, ElementName=EntityAuditListView, Converter={StaticResource UIElementSizeConverter}, ConverterParameter=14*}">
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate DataType="localmodels:EntityAudit">
-                                        <Border CornerRadius="4,4,0,0" Margin="-1" Padding="1"
-                                                Background="{Binding ColorCombination.PrimaryBackground, Converter={StaticResource ColorToBrushConverter}}">
-                                            <StackPanel Height="20" Orientation="Horizontal" VerticalAlignment="Top"
-                                                        ToolTip="{Binding Record.EntityDisplayName}">
-                                                <Border Background="White" CornerRadius="4" Width="22" BorderThickness="1" BorderBrush="DarkGray">
-                                                    <Image Source="{Binding Record, Converter={StaticResource IIconifiableToImageConverter}}" Stretch="None" />
-                                                </Border>
-                                                <TextBlock Text="{Binding Record.Name}" Margin="2,0,0,0" VerticalAlignment="Center"
-                                                           Foreground="{Binding ColorCombination.PrimaryForeground, Converter={StaticResource ColorToBrushConverter}}"
-                                                           TextTrimming="CharacterEllipsis" />
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                            <GridViewColumn Header="Event"
-                                                Width="{Binding ActualWidth, ElementName=EntityAuditListView, Converter={StaticResource UIElementSizeConverter}, ConverterParameter=5*}" >
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate DataType="localmodels:EntityAudit">
-                                        <TextBlock Text="{Binding EventName}" />
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                            <GridViewColumn Header="Changes"
-                                                Width="{Binding ActualWidth, ElementName=EntityAuditListView, Converter={StaticResource UIElementSizeConverter}, ConverterParameter=65*}" >
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate DataType="{x:Type localmodels:EntityAudit}">
-                                        <ItemsControl ScrollViewer.HorizontalScrollBarVisibility="Disabled" AlternationCount="2"
-                                                              ItemsSource="{Binding Details}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate DataType="localmodels:EntityAuditDetail">
-                                                    <Border x:Name="ItemBorder" Padding="2">
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource UIElementSizeConverter}, ConverterParameter=20*}" />
-                                                                <ColumnDefinition Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource UIElementSizeConverter}, ConverterParameter=30*}" />
-                                                                <ColumnDefinition Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource UIElementSizeConverter}, ConverterParameter=40*}" />
-                                                            </Grid.ColumnDefinitions>
-                                                            <TextBlock Text="{Binding ChangedFieldName}" ToolTip="{Binding ChangedFieldName}"
-                                                                       FontWeight="Bold"/>
-                                                            <localcontrols:EntityAuditValueControl Grid.Column="1"
-                                                                                                   Value="{Binding OldValue}" ToolTip="{Binding OldValue}" />
-
-                                                            <localcontrols:EntityAuditValueControl Grid.Column="2"
-                                                                                                   Value="{Binding NewValue}" ToolTip="{Binding NewValue}" />
-
-                                                        </Grid>
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate DataType="localmodels:EntityAudit">
+                                            <Border CornerRadius="4,4,0,0" Margin="-1" Padding="1"
+                                                    Background="{Binding ColorCombination.PrimaryBackground, Converter={StaticResource ColorToBrushConverter}}">
+                                                <StackPanel Height="20" Orientation="Horizontal" VerticalAlignment="Top"
+                                                            ToolTip="{Binding Record.EntityDisplayName}">
+                                                    <Border Background="White" CornerRadius="4" Width="22" BorderThickness="1" BorderBrush="DarkGray">
+                                                        <Image Source="{Binding Record, Converter={StaticResource IIconifiableToImageConverter}}" Stretch="None" />
                                                     </Border>
-                                                    <DataTemplate.Triggers>
-                                                        <Trigger Property="ItemsControl.AlternationIndex" Value="0">
-                                                            <Setter TargetName="ItemBorder" Property="Background" Value="Transparent" />
-                                                        </Trigger>
-                                                        <Trigger Property="ItemsControl.AlternationIndex" Value="1">
-                                                            <Setter TargetName="ItemBorder" Property="Background" Value="#E0E0E0" />
-                                                        </Trigger>
-                                                    </DataTemplate.Triggers>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                        </GridView.Columns>
-                    </GridView>
-                </ListView.View>
-                <d:ListView.ItemsSource>
-                    <localmocks:EntityAuditListViewItemsSource />
-                </d:ListView.ItemsSource>
-            </ListView>
+                                                    <TextBlock Text="{Binding Record.Name}" Margin="2,0,0,0" VerticalAlignment="Center"
+                                                               Foreground="{Binding ColorCombination.PrimaryForeground, Converter={StaticResource ColorToBrushConverter}}"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Event"
+                                                Width="{Binding ActualWidth, ElementName=EntityAuditListView, Converter={StaticResource UIElementSizeConverter}, ConverterParameter=5*}" >
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate DataType="localmodels:EntityAudit">
+                                            <TextBlock Text="{Binding EventName}" />
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Changes"
+                                                Width="{Binding ActualWidth, ElementName=EntityAuditListView, Converter={StaticResource UIElementSizeConverter}, ConverterParameter=62*}" >
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate DataType="{x:Type localmodels:EntityAudit}">
+                                            <ItemsControl ScrollViewer.HorizontalScrollBarVisibility="Disabled" AlternationCount="2"
+                                                          ItemsSource="{Binding Details}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate DataType="localmodels:EntityAuditDetail">
+                                                        <Border x:Name="ItemBorder" Padding="2">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource UIElementSizeConverter}, ConverterParameter=20*}" />
+                                                                    <ColumnDefinition Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource UIElementSizeConverter}, ConverterParameter=30*}" />
+                                                                    <ColumnDefinition Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource UIElementSizeConverter}, ConverterParameter=40*}" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Text="{Binding ChangedFieldName}" ToolTip="{Binding ChangedFieldName}"
+                                                                           FontWeight="Bold"/>
+                                                                <localcontrols:EntityAuditValueControl Grid.Column="1"
+                                                                                                       Value="{Binding OldValue}" ToolTip="{Binding OldValue}" />
+                                                                <localcontrols:EntityAuditValueControl Grid.Column="2"
+                                                                                                       Value="{Binding NewValue}" ToolTip="{Binding NewValue}" />
+                                                            </Grid>
+                                                        </Border>
+                                                        <DataTemplate.Triggers>
+                                                            <Trigger Property="ItemsControl.AlternationIndex" Value="0">
+                                                                <Setter TargetName="ItemBorder" Property="Background" Value="Transparent" />
+                                                            </Trigger>
+                                                            <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                                                                <Setter TargetName="ItemBorder" Property="Background" Value="#E0E0E0" />
+                                                            </Trigger>
+                                                        </DataTemplate.Triggers>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                            </GridView.Columns>
+                        </GridView>
+                    </ListView.View>
+                    <d:ListView.ItemsSource>
+                        <localmocks:EntityAuditListViewItemsSource />
+                    </d:ListView.ItemsSource>
+                </ListView>
+            </DockPanel>
         </Grid>
     </DockPanel>
 </UserControl>

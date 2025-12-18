@@ -300,7 +300,8 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
                             }
                         }
 
-                        auditList.AddRange(RetrieveAudits(entityAuditConditionList, criteriaConditions, orderType, pageInfo, out var pagingCookie, out var moreRecords));
+                        auditList.AddRange(RetrieveAudits(entityAuditConditionList, criteriaConditions, orderType, pageInfo,
+                            out var pagingCookie, out var moreRecords, out var totalRecordCount, out var totalRecordCountLimitExceeded));
                         var entityAuditHelper = new EntityAuditHelper(ServiceClient);
                         var entityAudits = auditList.Select(a => entityAuditHelper.ParseAudit(a,
                                     data[a.ObjectId.LogicalName][a.ObjectId.Id],
@@ -313,7 +314,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
 
                         doWorkEventArgs.Result = new EntityAuditResult(entityAudits.Where(ea => ea != null)
                             /*.Concat(defaultEntityAudits)*/
-                            .ToList(), pagingCookie, moreRecords);
+                            .ToList(), pagingCookie, moreRecords, totalRecordCount, totalRecordCountLimitExceeded);
                     },
                     PostWorkCallBack = runWorkerCompletedEventArgs =>
                     {
@@ -321,7 +322,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
                         {
                             runWorkerCompletedEventArgs.ThrowIfError();
                             var result = runWorkerCompletedEventArgs.Result as EntityAuditResult;
-                            _auditGogglesView.EntityAuditViewModel.ApplyEntityAuditResult(result.EntityAudits, result.PagingCookie, result.MoreRecords);
+                            _auditGogglesView.EntityAuditViewModel.ApplyEntityAuditResult(result);
                         }
                         catch (Exception exception)
                         {
@@ -336,7 +337,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
             }
             else
             {
-                _auditGogglesView.EntityAuditViewModel.ApplyEntityAuditResult(Enumerable.Empty<EntityAudit>(), null, true);
+                _auditGogglesView.EntityAuditViewModel.ApplyEntityAuditResult(EntityAuditResult.Empty);
             }
         }
 
@@ -400,7 +401,8 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
             return auditRecordList;
         }
 
-        private IEnumerable<Audit> RetrieveAudits(IEnumerable<EntityAuditConditionPair> entityAuditConditionPairs, IEnumerable<ConditionExpression> criteriaConditions, OrderType orderType, PagingInfo pageInfo, out string pagingCookie, out bool moreRecords)
+        private IEnumerable<Audit> RetrieveAudits(IEnumerable<EntityAuditConditionPair> entityAuditConditionPairs, IEnumerable<ConditionExpression> criteriaConditions, OrderType orderType, PagingInfo pageInfo,
+            out string pagingCookie, out bool moreRecords, out int totalRecordCount, out bool totalRecordCountLimitExceeded)
         {
             if (entityAuditConditionPairs?.Any() ?? false)
             {
@@ -445,12 +447,16 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
                 var results = Service.RetrieveMultiple(query);
                 pagingCookie = results.PagingCookie;
                 moreRecords = results.MoreRecords;
+                totalRecordCount = results.TotalRecordCount;
+                totalRecordCountLimitExceeded = results.TotalRecordCountLimitExceeded;
                 return results.Entities
                     .Select(e => e.ToEntity<Audit>())
                     .ToList();
             }
             pagingCookie = null;
             moreRecords = false;
+            totalRecordCount = 0;
+            totalRecordCountLimitExceeded = false;
             return Enumerable.Empty<Audit>();
         }
 

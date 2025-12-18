@@ -1,5 +1,6 @@
 ﻿using Formula81.XrmToolBox.Shared.Core.Components;
 using Formula81.XrmToolBox.Shared.Parts.Input;
+using Formula81.XrmToolBox.Tools.AuditGoggles.Components;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Events;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Models;
 using Microsoft.Xrm.Sdk.Query;
@@ -40,6 +41,12 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
 
         private int _columnCount;
         public int ColumnCount { get => _columnCount; private set => SetValue(nameof(ColumnCount), value, ref _columnCount); }
+
+        private int _count;
+        public int Count { get => _count; private set => SetValue(nameof(Count), value, ref _count); }
+
+        private int _total;
+        public int Total { get => _total; private set => SetValue(nameof(Total), value, ref _total); }
 
         private ListSortDirection _sortDirection;
         public ListSortDirection SortDirection { get => _sortDirection; set => SetValue(nameof(SortDirection), value, ref _sortDirection); }
@@ -157,21 +164,27 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
             _entityAuditCollection.Clear();
         }
 
-        internal void ApplyEntityAuditResult(IEnumerable<EntityAudit> entityAudits, string pagingCookie, bool moreRecords)
+        internal void ApplyEntityAuditResult(EntityAuditResult entityAuditResult)
         {
-            _pagingCookie = pagingCookie;
-            _hasMoreRecords = moreRecords;
-            if (!string.IsNullOrEmpty(pagingCookie))
+            _pagingCookie = entityAuditResult.PagingCookie;
+            _hasMoreRecords = entityAuditResult.MoreRecords;
+            if (!string.IsNullOrEmpty(_pagingCookie))
             {
                 _pageNumber++;
             }
 
-            foreach (var entityAudit in entityAudits)
+            foreach (var entityAudit in entityAuditResult.EntityAudits)
             {
                 _entityAuditCollection.Add(entityAudit);
             }
 
             _isLoading = false;
+
+            Count = _entityAuditCollection.Count;
+            if (!entityAuditResult.TotalRecordCountLimitExceeded)
+            {
+                Total = entityAuditResult.TotalRecordCount;
+            }
         }
 
         internal void Terminate(bool anyAuditRecords)
@@ -196,7 +209,6 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
             if (_isLoading || !_hasMoreRecords)
                 return;
 
-            // bottom reached
             if (scrollChangedEventArgs.VerticalOffset + scrollChangedEventArgs.ViewportHeight >= scrollChangedEventArgs.ExtentHeight - 40)
             {
                 HandleLoad();

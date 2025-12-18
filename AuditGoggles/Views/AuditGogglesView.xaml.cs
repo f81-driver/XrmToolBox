@@ -2,7 +2,6 @@
 using Formula81.XrmToolBox.Tools.AuditGoggles.Models;
 using Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels;
 using System;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Windows.Controls;
 

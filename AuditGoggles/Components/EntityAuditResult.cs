@@ -8,12 +8,14 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Components
         public IEnumerable<EntityAudit> EntityAudits { get; }
         public string PagingCookie { get; }
         public bool MoreRecords { get; }
+        public int TotalRecordCount { get; }
 
-        public EntityAuditResult(IEnumerable<EntityAudit> entityAudits, string pagingCookie, bool moreRecords)
+        public EntityAuditResult(IEnumerable<EntityAudit> entityAudits, string pagingCookie, bool moreRecords, int totalRecordCount)
         {
             EntityAudits = entityAudits;
             PagingCookie = pagingCookie;
             MoreRecords = moreRecords;
+            TotalRecordCount = totalRecordCount;
         }
     }
 }

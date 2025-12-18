@@ -41,6 +41,12 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         private int _columnCount;
         public int ColumnCount { get => _columnCount; private set => SetValue(nameof(ColumnCount), value, ref _columnCount); }
 
+        private int _count;
+        public int Count { get => _count; private set => SetValue(nameof(Count), value, ref _count); }
+
+        private int _total;
+        public int Total { get => _total; private set => SetValue(nameof(Total), value, ref _total); }
+
         private ListSortDirection _sortDirection;
         public ListSortDirection SortDirection { get => _sortDirection; set => SetValue(nameof(SortDirection), value, ref _sortDirection); }
 
@@ -157,7 +163,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
             _entityAuditCollection.Clear();
         }
 
-        internal void ApplyEntityAuditResult(IEnumerable<EntityAudit> entityAudits, string pagingCookie, bool moreRecords)
+        internal void ApplyEntityAuditResult(IEnumerable<EntityAudit> entityAudits, string pagingCookie, bool moreRecords, int totalRecordCount)
         {
             _pagingCookie = pagingCookie;
             _hasMoreRecords = moreRecords;
@@ -172,6 +178,9 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
             }
 
             _isLoading = false;
+
+            Count = _entityAuditCollection.Count;
+            Total = totalRecordCount;
         }
 
         internal void Terminate(bool anyAuditRecords)
@@ -196,7 +205,6 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
             if (_isLoading || !_hasMoreRecords)
                 return;
 
-            // bottom reached
             if (scrollChangedEventArgs.VerticalOffset + scrollChangedEventArgs.ViewportHeight >= scrollChangedEventArgs.ExtentHeight - 40)
             {
                 HandleLoad();

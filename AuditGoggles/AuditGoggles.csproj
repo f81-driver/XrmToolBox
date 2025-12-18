@@ -78,10 +78,13 @@
     <Compile Include="AuditGogglesPlugin.cs" />
     <Compile Include="Caches\EntityNameCache.cs" />
     <Compile Include="Components\ColorCombinations.cs" />
+    <Compile Include="Components\EntityAuditConditionPair.cs" />
+    <Compile Include="Components\EntityAuditResult.cs" />
     <Compile Include="Controls\EntityAuditValueControl.xaml.cs">
       <DependentUpon>EntityAuditValueControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Events\AuditRecordEntryViewModelEvents.cs" />
+    <Compile Include="Events\EntityAuditViewModelEvents.cs" />
+    <Compile Include="Events\AuditRecordViewModelEvents.cs" />
     <Compile Include="Exceptions\AuditRecordsLimitException.cs" />
     <Compile Include="AuditGogglesPluginControl.cs">
       <SubType>UserControl</SubType>
@@ -128,6 +131,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="AuditGoggles.nuspec" />
+    <None Include="CHANGELOG.md" />
     <None Include="version.json" />
   </ItemGroup>
   <ItemGroup>

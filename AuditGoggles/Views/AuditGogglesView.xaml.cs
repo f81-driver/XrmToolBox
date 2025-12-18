@@ -15,6 +15,8 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Views
         public AuditRecordViewModel AuditRecordViewModel { get; }
         public EntityAuditViewModel EntityAuditViewModel { get; }
 
+        private ScrollViewer _scrollViewer;
+
         public AuditGogglesView(AuditGogglesPluginControl auditGogglesPluginControl)
         {
             _auditGogglesPluginControl = auditGogglesPluginControl;
@@ -24,6 +26,8 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Views
             EntityAuditViewModel = new EntityAuditViewModel(_auditGogglesPluginControl);
 
             AuditRecordViewModel.ColorChanged += AuditRecordViewModel_ColorChanged;
+            AuditRecordViewModel.AuditRecordsChanged += AuditRecordViewModel_AuditRecordsChanged;
+            EntityAuditViewModel.EntityAuditsReset += EntityAuditViewModel_EntityAuditsReset;
 
             InitializeComponent();
 
@@ -70,9 +74,31 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Views
             }
         }
 
+        private void EntityAuditListView_ScrollChanged(object sender, ScrollChangedEventArgs scrollChangedEventArgs)
+        {
+            if (scrollChangedEventArgs.VerticalChange > 0)
+            {
+                if (_scrollViewer == null)
+                {
+                    _scrollViewer = scrollChangedEventArgs.OriginalSource as ScrollViewer;
+                }
+                EntityAuditViewModel?.ScrollChangedCommand.Execute(scrollChangedEventArgs);
+            }
+        }
+
+        private void AuditRecordViewModel_AuditRecordsChanged()
+        {
+            EntityAuditViewModel.Terminate(AuditRecordViewModel.IsEmpty);
+        }
+
+        private void EntityAuditViewModel_EntityAuditsReset()
+        {
+            _scrollViewer?.ScrollToTop();
+        }
+
         private void AuditRecordViewModel_ColorChanged(AuditRecord auditRecord)
         {
-            EntityAuditViewModel.UpdateColorCombination(auditRecord);
+            EntityAuditViewModel?.UpdateColorCombination(auditRecord);
         }
 
         private void AuditEntityFilterTextBox_FilterChanged(string filter)

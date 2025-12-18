@@ -12,7 +12,7 @@
 	<summary>Dataverse Audit History Tool</summary>
     <description>XrmToolBox Tool. Protects you sight from the perils of Audit History</description>
 	<releaseNotes>
-1.0 Initial release
+        https://github.com/f81-driver/XrmToolBox/blob/main/AuditGoggles/CHANGELOG.md
 	</releaseNotes>
     <copyright>Copyright 2025 Formula81</copyright>
     <tags>XrmToolBox Tool Audit Goggles History Dataverse Dynamics Power Platform</tags>

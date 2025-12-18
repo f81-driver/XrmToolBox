@@ -131,6 +131,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="AuditGoggles.nuspec" />
+    <None Include="CHANGELOG.md" />
     <None Include="version.json" />
   </ItemGroup>
   <ItemGroup>

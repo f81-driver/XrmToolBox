@@ -1,8 +1,4 @@
-Release History
-
-## 1.0.0 (2025-11-08)
-
-Initial release
+# Release History
 
 ## 1.0.25353 (2025-12-19)
 
@@ -19,3 +15,7 @@ Initial release
 
 - Minor tweaks
 - Limited Entity Audit to Audit Enabled Entities, "Default" Entity Audits(Created On and Last Modified On) are disabled for now
+
+## 1.0.0 (2025-11-08)
+
+Initial release

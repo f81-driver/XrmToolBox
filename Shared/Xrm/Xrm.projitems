@@ -6,13 +6,15 @@
     <SharedGUID>4953ecaf-2ce2-4468-90e9-b85f9ca9c5db</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>Xrm</Import_RootNamespace>
+    <Import_RootNamespace>Formula81.XrmToolBox.Shared.Xrm</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Audit.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Caches\EntityIconCache.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Caches\EntityNameCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ColumnNames\Audit.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ColumnNames\WebResource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Exceptions\ServiceClientNotAvailableException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\AuditEx.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\Metadata\AttributeMetadataEx.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\Metadata\BooleanAttributeMetadataEx.cs" />
@@ -20,6 +22,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)GlobalOptionSets.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\XrmHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Resources\XrmResourceRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SavedQuery.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SystemUser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UserQuery.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WebResource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XrmExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XrmToolkit.cs" />

@@ -6,10 +6,25 @@
     <SharedGUID>bb1fc49f-7c37-478b-b67f-16597c16e92a</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>XrmParts</Import_RootNamespace>
+    <Import_RootNamespace>Formula81.XrmToolBox.Shared.XrmParts</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Components\EntityListSelectionMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Components\IIconifiable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\EntityListControl.xaml.cs">
+      <DependentUpon>EntityListControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Converters\IIconifiableToImageConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Events\EntityInvokedEvent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Events\FavoriteEntitiesChangedEvent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Exceptions\FavorizeEntityException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Mocks\EntityListControlItemsSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\EntityItem.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="$(MSBuildThisFileDirectory)Controls\EntityListControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
 </Project>

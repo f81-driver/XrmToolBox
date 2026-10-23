@@ -462,6 +462,50 @@ namespace Formula81.XrmToolBox.Shared.Xrm {
             }
         }
         
+        [AttributeLogicalName("createdonbehalfby")]
+        [RelationshipSchemaName("lk_webresourcebase_createdonbehalfby")]
+        public SystemUser lk_webresourcebase_createdonbehalfby {
+            get {
+                return GetRelatedEntity<SystemUser>("lk_webresourcebase_createdonbehalfby", null);
+            }
+            set {
+                SetRelatedEntity("lk_webresourcebase_createdonbehalfby", null, value);
+            }
+        }
+        
+        [AttributeLogicalName("modifiedonbehalfby")]
+        [RelationshipSchemaName("lk_webresourcebase_modifiedonbehalfby")]
+        public SystemUser lk_webresourcebase_modifiedonbehalfby {
+            get {
+                return GetRelatedEntity<SystemUser>("lk_webresourcebase_modifiedonbehalfby", null);
+            }
+            set {
+                SetRelatedEntity("lk_webresourcebase_modifiedonbehalfby", null, value);
+            }
+        }
+        
+        [AttributeLogicalName("createdby")]
+        [RelationshipSchemaName("webresource_createdby")]
+        public SystemUser webresource_createdby {
+            get {
+                return GetRelatedEntity<SystemUser>("webresource_createdby", null);
+            }
+            set {
+                SetRelatedEntity("webresource_createdby", null, value);
+            }
+        }
+        
+        [AttributeLogicalName("modifiedby")]
+        [RelationshipSchemaName("webresource_modifiedby")]
+        public SystemUser webresource_modifiedby {
+            get {
+                return GetRelatedEntity<SystemUser>("webresource_modifiedby", null);
+            }
+            set {
+                SetRelatedEntity("webresource_modifiedby", null, value);
+            }
+        }
+        
         public static WebResource Retrieve(IOrganizationService service, Guid id, params Expression<Func<WebResource,object>>[] attrs) {
             return service.Retrieve(id, attrs);
         }

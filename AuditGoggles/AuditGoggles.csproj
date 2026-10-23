@@ -76,7 +76,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AuditGogglesPlugin.cs" />
-    <Compile Include="Caches\EntityNameCache.cs" />
     <Compile Include="Components\ColorCombinations.cs" />
     <Compile Include="Components\EntityAuditConditionPair.cs" />
     <Compile Include="Components\EntityAuditResult.cs" />
@@ -231,6 +230,7 @@
   <Import Project="..\Shared\Parts\Parts.projitems" Label="Shared" />
   <Import Project="..\Shared\Xrm\Xrm.projitems" Label="Shared" />
   <Import Project="..\Shared\XrmParts\XrmParts.projitems" Label="Shared" />
+  <Import Project="..\Shared\Proprietary\Proprietary.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>IF NOT EXIST Plugins (

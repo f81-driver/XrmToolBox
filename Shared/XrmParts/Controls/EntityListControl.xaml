@@ -1,0 +1,107 @@
+﻿<UserControl x:Name="EntityListControlRoot"
+             x:Class="Formula81.XrmToolBox.Shared.XrmParts.Controls.EntityListControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:localconverters="clr-namespace:Formula81.XrmToolBox.Shared.XrmParts.Converters"
+             xmlns:localmocks="clr-namespace:Formula81.XrmToolBox.Shared.XrmParts.Mocks"
+             xmlns:localmodels="clr-namespace:Formula81.XrmToolBox.Shared.XrmParts.Models"
+             xmlns:f81partscontrols="clr-namespace:Formula81.XrmToolBox.Shared.Parts.Controls"
+             mc:Ignorable="d" d:DesignHeight="400" d:DesignWidth="200">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <localconverters:IIconifiableToImageConverter x:Key="IIconifiableToImageConverter"/>
+
+            <DataTemplate x:Key="EntityItemDataTemplate" DataType="localmodels:EntityItem">
+                <Button x:Name="EntityItemButton" HorizontalContentAlignment="Stretch" 
+                        BorderThickness="0,0,0,1" BorderBrush="Transparent"
+                        ToolTip="{Binding ToolTip}"
+                        Command="{Binding ClickCommand, ElementName=EntityListControlRoot}"
+                        CommandParameter="{Binding}"
+                        Tag="{Binding FavorizeCommand, ElementName=EntityListControlRoot}">
+                    <Button.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Command="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                      CommandParameter="{Binding}">
+                                <MenuItem.Style>
+                                    <Style TargetType="MenuItem">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsFavorite}" Value="True">
+                                                <Setter Property="Header" Value="Unfavorite" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                        <Setter Property="Header" Value="Favorite" />
+                                    </Style>
+                                </MenuItem.Style>
+                            </MenuItem>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                    <Button.Content>
+                        <Grid Height="24">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="24" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Background="White" CornerRadius="4" Width="22" BorderThickness="1" BorderBrush="DarkGray">
+                                <Image x:Name="IconImage" Source="{Binding Converter={StaticResource IIconifiableToImageConverter}}" Stretch="None" />
+                            </Border>
+                            <TextBlock Text="{Binding DisplayName}" Grid.Column="1" Margin="2,0,0,0" FontSize="14"
+                                       VerticalAlignment="Center" />
+                        </Grid>
+                    </Button.Content>
+                </Button>
+            </DataTemplate>
+        </ResourceDictionary>
+    </UserControl.Resources>    
+    <Grid x:Name="EntityItemGrid" Background="Gray">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="24" />
+            <RowDefinition Height="24" />
+            <RowDefinition Height="Auto" MinHeight="24" />
+            <RowDefinition Height="24" />
+            <RowDefinition Height="*" MinHeight="200" />
+        </Grid.RowDefinitions>
+
+        <f81partscontrols:FilterInputControl x:Name="EntityFilterInputControl" Grid.Column="2"  Margin="0,0,0,2" />
+
+        <Label x:Name="FavoritesLabel" Grid.Row="1" Content="Favorites" Foreground="White" />
+        <!--<ScrollViewer x:Name="FavoriteEntityScrollViewer" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden"
+                  VerticalAlignment="Stretch">
+            <ItemsControl x:Name="FavoriteEntityItemsControl" ItemTemplate="{StaticResource EntityItemDataTemplate}" />
+        </ScrollViewer>-->
+        <ListBox x:Name="FavoriteEntityItemsControl"  Grid.Row="2"
+                 ItemTemplate="{StaticResource EntityItemDataTemplate}" />
+        <Label Grid.Row="3" Content="Entities" Foreground="White" />
+        <!--<ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden"
+                  VerticalAlignment="Stretch">
+            <ItemsControl x:Name="EntityItemsControl" ItemTemplate="{StaticResource EntityItemDataTemplate}">
+                <d:ItemsControl.ItemsSource>
+                    <localmocks:EntityListControlItemsSource />
+                </d:ItemsControl.ItemsSource>
+            </ItemsControl>
+        </ScrollViewer> -->
+        <ListBox x:Name="EntityItemsControl" Grid.Row="4"                 
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 ItemTemplate="{StaticResource EntityItemDataTemplate}">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="Margin" Value="0"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel Orientation="Vertical"/>
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>            
+            <d:ListBox.ItemsSource>
+                <localmocks:EntityListControlItemsSource />
+            </d:ListBox.ItemsSource>
+        </ListBox>
+    </Grid>
+</UserControl>

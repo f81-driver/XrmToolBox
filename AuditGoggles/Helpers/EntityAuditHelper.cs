@@ -4,7 +4,6 @@ using Formula81.XrmToolBox.Shared.Xrm;
 using Formula81.XrmToolBox.Shared.Xrm.Caches;
 using Formula81.XrmToolBox.Shared.Xrm.Extensions.Metadata;
 using Formula81.XrmToolBox.Shared.Xrm.Helpers;
-using Formula81.XrmToolBox.Tools.AuditGoggles.Caches;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Models;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;

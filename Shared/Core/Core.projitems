@@ -6,7 +6,7 @@
     <SharedGUID>11c22580-8d6d-4c79-9207-4a87a613ab7c</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>Core</Import_RootNamespace>
+    <Import_RootNamespace>Formula81.XrmToolBox.Shared.Core</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Components\ObservableObject.cs" />

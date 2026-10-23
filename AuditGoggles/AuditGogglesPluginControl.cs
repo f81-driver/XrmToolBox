@@ -1,9 +1,10 @@
 ﻿using Formula81.XrmToolBox.Shared.Core.Extensions;
 using Formula81.XrmToolBox.Shared.Core.Extensions.ComponentModel;
 using Formula81.XrmToolBox.Shared.Parts.Utilities;
+using Formula81.XrmToolBox.Shared.Properietary;
 using Formula81.XrmToolBox.Shared.Xrm;
 using Formula81.XrmToolBox.Shared.Xrm.Caches;
-using Formula81.XrmToolBox.Tools.AuditGoggles.Caches;
+using Formula81.XrmToolBox.Shared.Xrm.Exceptions;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Components;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Exceptions;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Helpers;
@@ -32,10 +33,6 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
 {
     public partial class AuditGogglesPluginControl : PluginControlBase, IMessageBusHost, IGitHubPlugin, IPayPalPlugin
     {
-        private const string ServiceClientNotAvailableMessage = "Service Client is not available";
-
-        private const string GitHubRepositoryName = "XrmToolBox";
-        private const string GitHubUserName = "f81-driver";
         private const string FetchXmlBuilderSourcePluginName = "FetchXML Builder";
 
         public const int AuditRecordsMax = 100;
@@ -49,12 +46,12 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
 
         public AuditGogglesSettings Settings { get; private set; }
 
-        public string RepositoryName => GitHubRepositoryName;
-        public string UserName => GitHubUserName;
-        public string DonationDescription => AuditGogglesPlugin.PayPalDonationDescription;
-        public string EmailAccount => AuditGogglesPlugin.PayPalEmailAccount;
+        public string RepositoryName => Informations.GitHubRepositoryName;
+        public string UserName => Informations.GitHubUserName;
+        public string DonationDescription => Informations.PayPalDonationDescription;
+        public string EmailAccount => Informations.PayPalEmailAccount;
 
-        private CrmServiceClient ServiceClient { get => (ConnectionDetail?.ServiceClient?.IsReady ?? false ? ConnectionDetail.ServiceClient : null) ?? throw new InvalidOperationException(ServiceClientNotAvailableMessage); }
+        private CrmServiceClient ServiceClient { get => (ConnectionDetail?.ServiceClient?.IsReady ?? false ? ConnectionDetail.ServiceClient : null) ?? throw new ServiceClientNotAvailableException(); }
 
         public AuditGogglesPluginControl()
         {

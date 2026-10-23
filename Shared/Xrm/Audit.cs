@@ -254,6 +254,28 @@ namespace Formula81.XrmToolBox.Shared.Xrm {
             }
         }
         
+        [AttributeLogicalName("callinguserid")]
+        [RelationshipSchemaName("lk_audit_callinguserid")]
+        public SystemUser lk_audit_callinguserid {
+            get {
+                return GetRelatedEntity<SystemUser>("lk_audit_callinguserid", null);
+            }
+            set {
+                SetRelatedEntity("lk_audit_callinguserid", null, value);
+            }
+        }
+        
+        [AttributeLogicalName("userid")]
+        [RelationshipSchemaName("lk_audit_userid")]
+        public SystemUser lk_audit_userid {
+            get {
+                return GetRelatedEntity<SystemUser>("lk_audit_userid", null);
+            }
+            set {
+                SetRelatedEntity("lk_audit_userid", null, value);
+            }
+        }
+        
         public static Audit Retrieve(IOrganizationService service, Guid id, params Expression<Func<Audit,object>>[] attrs) {
             return service.Retrieve(id, attrs);
         }

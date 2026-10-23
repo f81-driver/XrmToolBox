@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-namespace Formula81.XrmToolBox.Tools.AuditGoggles.Caches
+namespace Formula81.XrmToolBox.Shared.Xrm.Caches
 {
     public class EntityNameCache
     {

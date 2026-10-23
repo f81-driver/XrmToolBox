@@ -88,7 +88,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Views
 
         private void AuditRecordViewModel_AuditRecordsChanged()
         {
-            EntityAuditViewModel.Terminate(AuditRecordViewModel.IsEmpty);
+            EntityAuditViewModel.Terminate(AuditRecordViewModel.HasAuditRecords);
         }
 
         private void EntityAuditViewModel_EntityAuditsReset()

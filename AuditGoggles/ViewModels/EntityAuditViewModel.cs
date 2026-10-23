@@ -161,7 +161,13 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
             _pageNumber = 1;
             _pagingCookie = null;
             _hasMoreRecords = true;
+            _isLoading = false;
             _entityAuditCollection.Clear();
+        }
+
+        internal void EndLoad()
+        {
+            _isLoading = false;
         }
 
         internal void ApplyEntityAuditResult(EntityAuditResult entityAuditResult)

@@ -6,10 +6,12 @@ using Formula81.XrmToolBox.Shared.Xrm.Extensions.Metadata;
 using Formula81.XrmToolBox.Shared.Xrm.Helpers;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Caches;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Models;
+using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 using Microsoft.Xrm.Tooling.Connector;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -62,6 +64,61 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
             }
         }
 
+        internal void PrefetchLookupNames(IEnumerable<Audit> audits, IDictionary<string, EntityMetadata> entityMetadatas)
+        {
+            var entityRefList = new List<EntityReference>();
+            var lookupAttributeNames = new Dictionary<string, HashSet<string>>();
+            foreach (var audit in audits)
+            {
+                var logicalName = audit.ObjectId?.LogicalName;
+                if (string.IsNullOrEmpty(logicalName)
+                    || !entityMetadatas.TryGetValue(logicalName, out var entityMetadata)
+                    || entityMetadata == null)
+                {
+                    continue;
+                }
+                if (audit.Action == Audit_Action.AssociateEntities || audit.Action == Audit_Action.DisassociateEntities)
+                {
+                    var detailDatas = audit.ChangeData?.Split('~');
+                    if ((detailDatas?.Length ?? 0) == 2
+                        && TryParseEntityReference(detailDatas[1], out var nnEntityRef))
+                    {
+                        entityRefList.Add(nnEntityRef);
+                    }
+                }
+                else if (TryParseChangeData(audit.ChangeData, out var changeData))
+                {
+                    if (!lookupAttributeNames.TryGetValue(logicalName, out var lookupNames))
+                    {
+                        lookupNames = new HashSet<string>(entityMetadata.Attributes.Where(am => am.AttributeType == AttributeTypeCode.Lookup
+                                || am.AttributeType == AttributeTypeCode.Customer
+                                || am.AttributeType == AttributeTypeCode.Owner)
+                            .Select(am => am.LogicalName));
+                        lookupAttributeNames[logicalName] = lookupNames;
+                    }
+                    foreach (var changedAttribute in changeData.SelectTokens("$.changedAttributes[*]")
+                        .Where(ca => lookupNames.Contains(ca.SelectToken("logicalName")?.Value<string>() ?? string.Empty)))
+                    {
+                        foreach (var valueToken in new[] { changedAttribute.SelectToken("oldValue"), changedAttribute.SelectToken("newValue") })
+                        {
+                            if (valueToken?.Type == JTokenType.String
+                                && TryParseEntityReference(valueToken.Value<string>(), out var entityRef))
+                            {
+                                entityRefList.Add(entityRef);
+                            }
+                        }
+                    }
+                }
+            }
+            EntityNameCache.Instance.Prefetch(entityRefList);
+        }
+
+        private static bool TryParseEntityReference(string value, out EntityReference entityRef)
+        {
+            entityRef = !string.IsNullOrEmpty(value) && value.Contains(",") ? XrmHelper.FromCommaSeparated(value) : null;
+            return entityRef != null;
+        }
+
         internal IEnumerable<EntityAudit> GetDefaultEntityAudits(Entity entity, EntityMetadata entityMetadata, ColorCombination colorCombination)
         {
             var createdEntityAudit = GetDefaultEntityAudit(Audit_Operation.Create, entity, entityMetadata, colorCombination);
@@ -100,22 +157,77 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
                 .Where(a => a.HasValue)
                 .Select(a => a.Value)
                     ?? Enumerable.Empty<int>();
-            var changeData = JObject.Parse(audit.ChangeData);
             var attributes = entityMetadata.Attributes.Where(am => am.ColumnNumber.HasValue
                                 && ((columns?.AllColumns ?? true) || (columns?.Columns.Contains(am.LogicalName) ?? true)))
                             .ToDictionary(am => am.ColumnNumber.Value);
+            if (!audit.CreatedOn.HasValue)
+            {
+                return null;
+            }
+            var changedAttributes = attributeNumbers.Where(an => attributes.ContainsKey(an))
+                .Select(an => attributes[an]);
+            var isChangeDataParsed = TryParseChangeData(audit.ChangeData, out var changeData);
+            var auditDetail = !isChangeDataParsed && changedAttributes.Any() ? RetrieveAttributeAuditDetail(audit) : null;
 
-            return audit.CreatedOn.HasValue ?
-                new EntityAudit(audit.CreatedOn.Value.ToLocalTime(),
-                    audit.UserId?.Name ?? audit.UserId.Id.ToString(),
+            return new EntityAudit(audit.CreatedOn.Value.ToLocalTime(),
+                    GetUserName(audit),
                     GetEntityLookupValue(entity, entityMetadata),
                     audit.ActionDisplayName,
                     colorCombination,
-                    attributeNumbers.Where(an => attributes.ContainsKey(an))
-                        .Select(an => CreateEntityAuditDetail(changeData, entity, attributes[an]))
+                    changedAttributes.Select(am => isChangeDataParsed ? CreateEntityAuditDetail(changeData, entity, am)
+                            : CreateEntityAuditDetail(auditDetail, am))
                         .OrderBy(ead => ead.ChangedFieldName)
-                        .ToList())
-                : null;
+                        .ToList());
+        }
+
+        private static bool TryParseChangeData(string changeData, out JObject changeDataObject)
+        {
+            changeDataObject = null;
+            // Older audit rows store ChangeData as "~" separated values instead of JSON
+            if (string.IsNullOrWhiteSpace(changeData)
+                || !changeData.TrimStart().StartsWith("{"))
+            {
+                return false;
+            }
+            try
+            {
+                changeDataObject = JObject.Parse(changeData);
+                return true;
+            }
+            catch (JsonReaderException)
+            {
+                return false;
+            }
+        }
+
+        private AttributeAuditDetail RetrieveAttributeAuditDetail(Audit audit)
+        {
+            var response = (RetrieveAuditDetailsResponse)_serviceClient.Execute(new RetrieveAuditDetailsRequest { AuditId = audit.Id });
+            return response.AuditDetail as AttributeAuditDetail;
+        }
+
+        private EntityAuditDetail CreateEntityAuditDetail(AttributeAuditDetail auditDetail, AttributeMetadata attributeMetadata)
+        {
+            var oldValue = ParseAuditDetailValue(auditDetail?.OldValue, attributeMetadata);
+            var newValue = ParseAuditDetailValue(auditDetail?.NewValue, attributeMetadata);
+            return new EntityAuditDetail(attributeMetadata.DisplayName?.UserLocalizedLabel?.Label ?? attributeMetadata.LogicalName, oldValue, newValue);
+        }
+
+        private EntityAuditValue ParseAuditDetailValue(Entity valueEntity, AttributeMetadata attributeMetadata)
+        {
+            if (valueEntity == null
+                || !valueEntity.TryGetAttributeValue(attributeMetadata.LogicalName, out object value)
+                || value == null)
+            {
+                return null;
+            }
+            if (value is EntityReference entityRef)
+            {
+                var entityMetadata = _serviceClient.GetEntityMetadata(entityRef.LogicalName);
+                return new EntityAuditValue(entityRef, GetEntityLookupValue(entityRef, entityMetadata));
+            }
+            var displayValue = valueEntity.FormattedValues.TryGetValue(attributeMetadata.LogicalName, out var formattedValue) ? formattedValue : value.ToString();
+            return new EntityAuditValue(value, displayValue);
         }
 
         private EntityAudit GetNNEntityAudit(Audit audit, Entity entity, EntityMetadata entityMetadata, ColorCombination colorCombination)
@@ -130,7 +242,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
                     var displayValue = GetEntityLookupValue(entityRef, entityRefMetadata);
                     var details = new EntityAuditDetail[] { new EntityAuditDetail(entityMetadata?.GetDisplayLabel(), null, new EntityAuditValue(entityRef, displayValue)) };
                     return new EntityAudit(audit.CreatedOn.Value.ToLocalTime(),
-                        audit.UserId?.Name ?? audit.UserId.Id.ToString(),
+                        GetUserName(audit),
                         GetEntityLookupValue(entity, entityMetadata),
                         audit.ActionDisplayName,
                         colorCombination,
@@ -143,7 +255,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
         private EntityAudit GetAccessEntityAudit(Audit audit, Entity entity, EntityMetadata entityMetadata, ColorCombination colorCombination)
         {
             return new EntityAudit(audit.CreatedOn.Value.ToLocalTime(),
-                        audit.UserId?.Name ?? audit.UserId.Id.ToString(),
+                        GetUserName(audit),
                         GetEntityLookupValue(entity, entityMetadata),
                         audit.ActionDisplayName,
                         colorCombination,
@@ -190,19 +302,28 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
                         break;
 
                     case AttributeTypeCode.DateTime:
-                        var x = attributeMetadata as DateTimeAttributeMetadata;
-                        value = valueToken.TryValue<DateTime>(out var dateTimeValue) ? (DateTime?)dateTimeValue : null;
-                        displayValue = value == null ? null
-                            : dateTimeValue.ToString(x.DateTimeBehavior.Equals(DateTimeBehavior.DateOnly) ? "d" : "g");
+                        var dateTimeBehavior = (attributeMetadata as DateTimeAttributeMetadata)?.DateTimeBehavior;
+                        var isDateOnly = DateTimeBehavior.DateOnly.Equals(dateTimeBehavior);
+                        var isTimeZoneIndependent = isDateOnly || DateTimeBehavior.TimeZoneIndependent.Equals(dateTimeBehavior);
+                        if (valueToken.TryValue<DateTime>(out var dateTimeValue))
+                        {
+                            // User Local values are stored in UTC, Date Only and Time Zone Independent values are not converted
+                            if (!isTimeZoneIndependent && dateTimeValue.Kind != DateTimeKind.Local)
+                            {
+                                dateTimeValue = DateTime.SpecifyKind(dateTimeValue, DateTimeKind.Utc).ToLocalTime();
+                            }
+                            value = dateTimeValue;
+                            displayValue = dateTimeValue.ToString(isDateOnly ? "d" : "g");
+                        }
                         break;
 
                     case AttributeTypeCode.Decimal:
+                    case AttributeTypeCode.Money:
                         value = valueToken.TryValue<decimal>(out var decimalValue) ? (decimal?)decimalValue : null;
                         displayValue = value?.ToString();
                         break;
 
                     case AttributeTypeCode.Double:
-                    case AttributeTypeCode.Money:
                         value = valueToken.TryValue<double>(out var doubleValue) ? (double?)doubleValue : null;
                         displayValue = value?.ToString();
                         break;
@@ -250,6 +371,11 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
                 }
             }
             return value == null ? null : new EntityAuditValue(value, displayValue);
+        }
+
+        private static string GetUserName(Audit audit)
+        {
+            return audit.UserId?.Name ?? audit.UserId?.Id.ToString();
         }
 
         private static EntityLookupValue GetEntityLookupValue(EntityReference entityRef, EntityMetadata entityMetadata)

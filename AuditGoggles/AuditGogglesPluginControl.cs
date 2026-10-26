@@ -271,6 +271,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
             if (auditRecords.Any())
             {
                 IsBusy = true;
+                IEnumerable<AuditRecord> deletedAuditRecords = null;
                 WorkAsync(new WorkAsyncInfo
                 {
                     Message = message,
@@ -282,7 +283,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
                         // Metadata, records and conditions only change on a new load, so reuse them while scrolling
                         if (pageInfo.PageNumber <= 1 || _entityAuditMetadatas == null)
                         {
-                            PrepareEntityAuditLoad(auditRecords, columns);
+                            deletedAuditRecords = PrepareEntityAuditLoad(auditRecords, columns);
                         }
                         var entityAuditConditionList = _entityAuditConditionList;
                         var data = _entityAuditDatas;
@@ -310,6 +311,11 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
                         try
                         {
                             runWorkerCompletedEventArgs.ThrowIfError();
+                            if (deletedAuditRecords?.Any() ?? false)
+                            {
+                                _auditGogglesView.AuditRecordViewModel.RemoveDeleted(deletedAuditRecords);
+                                ShowWarningNotification($"Removed Audit Records that no longer exist: {string.Join(", ", deletedAuditRecords.Select(ar => ar.Name))}", null);
+                            }
                             var result = runWorkerCompletedEventArgs.Result as EntityAuditResult;
                             _auditGogglesView.EntityAuditViewModel.ApplyEntityAuditResult(result);
                         }
@@ -331,8 +337,9 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
             }
         }
 
-        private void PrepareEntityAuditLoad(IEnumerable<AuditRecord> auditRecords, IDictionary<string, ColumnSet> columns)
+        private IEnumerable<AuditRecord> PrepareEntityAuditLoad(IEnumerable<AuditRecord> auditRecords, IDictionary<string, ColumnSet> columns)
         {
+            var deletedAuditRecordList = new List<AuditRecord>();
             var entityAuditConditionList = new List<EntityAuditConditionPair>();
             var data = new Dictionary<string, Dictionary<Guid, Entity>>();
             var entityMetadatas = new Dictionary<string, EntityMetadata>();
@@ -345,8 +352,12 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
                 var entities = RetrieveEntities(entityMetadata, auditRecordGroup.Select(g => g), EntityAuditHelper.GetEntityAuditEntityColumns(entityMetadata));
                 data[auditRecordGroup.Key] = entities.ToDictionary(e => e.Id, e => e);
                 EntityNameCache.Instance.Upsert(auditRecordGroup.Key, entities.ToDictionary(e => e.Id, e => e.GetAttributeValue<string>(entityMetadata.PrimaryNameAttribute)));
+                // Records deleted after being added are skipped here and removed from the Audit Records afterwards
+                deletedAuditRecordList.AddRange(auditRecords.Where(ar => ar.EntityLogicalName.Equals(auditRecordGroup.Key) && !data[auditRecordGroup.Key].ContainsKey(ar.Id)));
+                var existingIds = auditRecordGroup.Where(i => data[auditRecordGroup.Key].ContainsKey(i)).ToList();
 
-                if (entityMetadata?.IsAuditEnabled?.Value ?? false)
+                if ((entityMetadata?.IsAuditEnabled?.Value ?? false)
+                    && existingIds.Any())
                 {
                     var attributes = entityMetadata.Attributes.Where(am => am.ColumnNumber.HasValue)
                         .ToDictionary(am => am.LogicalName, am => am.ColumnNumber.Value);
@@ -355,12 +366,13 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
                         .Where(m => m.HasValue)
                         .Select(m => m.Value)
                         .ToList() ?? Enumerable.Empty<int>();
-                    entityAuditConditionList.Add(new EntityAuditConditionPair(auditRecordGroup.ToList(), attributeMasks));
+                    entityAuditConditionList.Add(new EntityAuditConditionPair(existingIds, attributeMasks));
                 }
             }
             _entityAuditConditionList = entityAuditConditionList;
             _entityAuditDatas = data;
             _entityAuditMetadatas = entityMetadatas;
+            return deletedAuditRecordList;
         }
 
         private void ResetEntityAuditLoad()

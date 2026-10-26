@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace Formula81.XrmToolBox.Tools.AuditGoggles.Views
 {
@@ -48,6 +49,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Views
 
             EditEntityAuditFiltersButton.Command = EntityAuditViewModel.EditFilters;
             EditEntityAuditColumnsButton.Command = EntityAuditViewModel.EditColumns;
+            ExportEntityAuditsButton.Command = EntityAuditViewModel.ExportCommand;
 
             var columnWidthDescriptor = DependencyPropertyDescriptor.FromProperty(GridViewColumn.WidthProperty, typeof(GridViewColumn));
             foreach (var column in new[] { ChangedDateColumn, ChangedByColumn, RecordColumn, EventColumn })
@@ -93,6 +95,16 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Views
                     _scrollViewer = scrollChangedEventArgs.OriginalSource as ScrollViewer;
                 }
                 EntityAuditViewModel?.ScrollChangedCommand.Execute(scrollChangedEventArgs);
+            }
+        }
+
+        private void EntityAuditListViewItem_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is ListViewItem listViewItem
+                && EntityAuditViewModel.ShowDetailsCommand.CanExecute(listViewItem.DataContext))
+            {
+                EntityAuditViewModel.ShowDetailsCommand.Execute(listViewItem.DataContext);
+                e.Handled = true;
             }
         }
 

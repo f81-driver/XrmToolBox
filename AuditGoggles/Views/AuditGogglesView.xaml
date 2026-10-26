@@ -35,6 +35,76 @@
                 <Setter Property="IsHitTestVisible" Value="False" />
             </Style>
 
+            <!-- Context menu of an audit row; DataContext is the EntityAudit, Tag of the row is the EntityAuditViewModel -->
+            <ContextMenu x:Key="EntityAuditContextMenu" x:Shared="False">
+                <MenuItem Header="Show Details"
+                          Command="{Binding PlacementTarget.Tag.ShowDetailsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                          CommandParameter="{Binding}">
+                    <MenuItem.Icon>
+                        <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                            <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideInfo}" />
+                        </Viewbox>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Open Record in Browser"
+                          Command="{Binding PlacementTarget.Tag.OpenInBrowserCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                          CommandParameter="{Binding Record}">
+                    <MenuItem.Icon>
+                        <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                            <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideExternalLink}" />
+                        </Viewbox>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator />
+                <MenuItem Header="Copy Record Id"
+                          Command="{Binding PlacementTarget.Tag.CopyCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                          CommandParameter="{Binding Record.Id}">
+                    <MenuItem.Icon>
+                        <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                            <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideCopy}" />
+                        </Viewbox>
+                    </MenuItem.Icon>
+                </MenuItem>
+            </ContextMenu>
+
+            <!-- Context menu of an old or new value; the value is the Value of the placement target -->
+            <ContextMenu x:Key="EntityAuditValueContextMenu" x:Shared="False">
+                <MenuItem Header="Copy Value"
+                          Command="{Binding PlacementTarget.Tag.CopyCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                          CommandParameter="{Binding PlacementTarget.Value, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                    <MenuItem.Icon>
+                        <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                            <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideCopy}" />
+                        </Viewbox>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Open in Browser"
+                          Command="{Binding PlacementTarget.Tag.OpenInBrowserCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                          CommandParameter="{Binding PlacementTarget.Value, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                          Visibility="{Binding PlacementTarget.Value.IsEntityReference, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=Collapsed}">
+                    <MenuItem.Icon>
+                        <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                            <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideExternalLink}" />
+                        </Viewbox>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Add to Audit Records"
+                          Command="{Binding PlacementTarget.Tag.AddAuditRecordCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                          CommandParameter="{Binding PlacementTarget.Value, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                          Visibility="{Binding PlacementTarget.Value.IsEntityReference, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=Collapsed}">
+                    <MenuItem.Icon>
+                        <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                            <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucidePlus}" />
+                        </Viewbox>
+                    </MenuItem.Icon>
+                </MenuItem>
+            </ContextMenu>
+
+            <Style x:Key="EntityAuditValueControlStyle" TargetType="localcontrols:EntityAuditValueControl">
+                <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListView}}" />
+                <Setter Property="ContextMenu" Value="{StaticResource EntityAuditValueContextMenu}" />
+            </Style>
+
             <DataTemplate x:Key="AuditEntityDataTemplate" DataType="localmodels:AuditEntity">
                 <Button x:Name="AuditEntityButton" HorizontalContentAlignment="Stretch"
                         BorderThickness="0,0,0,1" BorderBrush="Transparent"
@@ -64,12 +134,55 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="24" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="22" />
                             </Grid.ColumnDefinitions>
                             <Border Background="White" CornerRadius="4" Width="22" BorderThickness="1" BorderBrush="DarkGray">
                                 <Image x:Name="IconImage" Source="{Binding Converter={StaticResource IIconifiableToImageConverter}}" Stretch="None" />
                             </Border>
                             <TextBlock Text="{Binding DisplayName}" Grid.Column="1" Margin="2,0,0,0" FontSize="14"
-                                       VerticalAlignment="Center" />
+                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            <!-- Favorite star: always shown for favorites, otherwise only on hover -->
+                            <Button Grid.Column="2" Focusable="False" Cursor="Hand"
+                                    Command="{Binding Tag.FavorizeCommand, RelativeSource={RelativeSource AncestorType=Button}}"
+                                    CommandParameter="{Binding}">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="Transparent">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Visibility" Value="Hidden" />
+                                        <Setter Property="ToolTip" Value="Add to Favorites" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsFavorite}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Setter Property="ToolTip" Value="Remove from Favorites" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <Viewbox Width="16" Height="16">
+                                    <Path Data="{StaticResource LucideStar}">
+                                        <Path.Style>
+                                            <Style TargetType="Path" BasedOn="{StaticResource LucideIconStyle}">
+                                                <Setter Property="Stroke" Value="Gray" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsFavorite}" Value="True">
+                                                        <Setter Property="Stroke" Value="{StaticResource AccentBrush}" />
+                                                        <Setter Property="Fill" Value="{StaticResource AccentBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Path.Style>
+                                    </Path>
+                                </Viewbox>
+                            </Button>
                         </Grid>
                     </Button.Content>
                 </Button>
@@ -187,13 +300,13 @@
                                      FilterChanged="AuditEntityFilterTextBox_FilterChanged" />
 
                 <Label Grid.Row="1" Content="Favorites" Foreground="White" />
-                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden"
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                               VerticalAlignment="Stretch">
                     <ItemsControl x:Name="FavoriteAuditEntityItemsControl" ItemTemplate="{StaticResource AuditEntityDataTemplate}"
                                   ItemsSource="{Binding FavoriteAuditEntitiesViewSource}" />
                 </ScrollViewer>
                 <Label Grid.Row="3" Content="Audit Entities" Foreground="White" />
-                <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden"
+                <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                               VerticalAlignment="Stretch">
                     <ItemsControl x:Name="AuditEntityItemsControl" ItemTemplate="{StaticResource AuditEntityDataTemplate}"
                                   ItemsSource="{Binding AuditEntitiesViewSource}">
@@ -218,7 +331,7 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type localmodels:AuditRecord}">
-                        <Border BorderThickness="1" BorderBrush="DarkGray" Margin="1" 
+                        <Border BorderThickness="1" BorderBrush="DarkGray" Margin="1"
                                 Padding="4" CornerRadius="4"
                                 Background="{Binding ColorCombination.PrimaryBackground, Converter={StaticResource ColorToBrushConverter}}"
                                 Tag="{Binding DataContext, ElementName=AuditRecordItemsControl}">
@@ -318,10 +431,19 @@
                                 <Border Width="18" Height="18" Background="{StaticResource AccentBrush}" CornerRadius="9" Margin="0,-5,-5,0"
                                         HorizontalAlignment="Right" VerticalAlignment="Top"
                                         Visibility="{Binding HasColumns, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                    <TextBlock Foreground="White" FontWeight="Bold" FontSize="11" 
+                                    <TextBlock Foreground="White" FontWeight="Bold" FontSize="11"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                                Text="{Binding ColumnCount}" />
                                 </Border>
+                            </WrapPanel>
+                        </Button>
+                        <Separator />
+                        <Button x:Name="ExportEntityAuditsButton" ToolTip="Export the loaded audits to CSV">
+                            <WrapPanel>
+                                <Viewbox Style="{StaticResource LucideIconViewboxStyle}">
+                                    <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideFileSpreadsheet}" />
+                                </Viewbox>
+                                <Label Content="Export" />
                             </WrapPanel>
                         </Button>
                     </ToolBar>
@@ -344,6 +466,9 @@
                               IsEnabled="{Binding IsInitiated}">
                         <ListView.ItemContainerStyle>
                             <Style TargetType="ListViewItem">
+                                <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListView}}" />
+                                <Setter Property="ContextMenu" Value="{StaticResource EntityAuditContextMenu}" />
+                                <EventSetter Event="MouseDoubleClick" Handler="EntityAuditListViewItem_MouseDoubleClick" />
                                 <Setter Property="BorderThickness" Value="4,0,0,2" />
                                 <Setter Property="BorderBrush" Value="{Binding ColorCombination.PrimaryBackground, Converter={StaticResource ColorToBrushConverter}}" />
                                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -427,7 +552,7 @@
                                                                     </Grid.ColumnDefinitions>
                                                                     <TextBlock Text="{Binding ChangedFieldName}" ToolTip="{Binding ChangedFieldName}"
                                                                                FontWeight="Bold"/>
-                                                                    <localcontrols:EntityAuditValueControl Grid.Column="1"
+                                                                    <localcontrols:EntityAuditValueControl Grid.Column="1" Style="{StaticResource EntityAuditValueControlStyle}"
                                                                                                            Value="{Binding OldValue}" ToolTip="{Binding OldValue}" />
                                                                     <Viewbox Grid.Column="2" Width="12" Height="12" VerticalAlignment="Top" Margin="0,2,0,0">
                                                                         <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideArrowRight}" Stroke="Gray" />
@@ -445,7 +570,7 @@
                                                                             </Style>
                                                                         </Viewbox.Style>
                                                                     </Viewbox>
-                                                                    <localcontrols:EntityAuditValueControl Grid.Column="3"
+                                                                    <localcontrols:EntityAuditValueControl Grid.Column="3" Style="{StaticResource EntityAuditValueControlStyle}"
                                                                                                            Value="{Binding NewValue}" ToolTip="{Binding NewValue}" />
                                                                 </Grid>
                                                             </Border>

@@ -16,6 +16,7 @@ using Microsoft.Xrm.Sdk.Query;
 using Microsoft.Xrm.Tooling.Connector;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
@@ -179,6 +180,44 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
             window.SetSource(entityMetadataList, columns);
 
             return window.ShowDialog() ?? false ? window.Get() : columns;
+        }
+
+        internal void ShowEntityAuditDetailDialog(EntityAudit entityAudit)
+        {
+            var window = new EntityAuditDetailWindow(this)
+            {
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                DataContext = entityAudit
+            };
+            var center = WindowUtility.CalculateCenter(window.Width, window.Height, GetWindowBounds());
+            window.Left = center.X;
+            window.Top = center.Y;
+            _ = new WindowInteropHelper(window)
+            {
+                Owner = Handle
+            };
+            window.ShowDialog();
+        }
+
+        internal void AddAuditRecords(IEnumerable<EntityReference> entityRefs)
+        {
+            var newEntityRefs = entityRefs.Where(er => er != null && !_auditGogglesView.AuditRecordViewModel.ContainsId(er.Id))
+                .ToList();
+            if (newEntityRefs.Any())
+            {
+                LoadAuditRecordsAsync(service => newEntityRefs);
+            }
+        }
+
+        internal void OpenInBrowser(EntityReference entityRef)
+        {
+            var webApplicationUrl = ConnectionDetail?.WebApplicationUrl;
+            if (entityRef != null
+                && !string.IsNullOrEmpty(webApplicationUrl))
+            {
+                var url = $"{webApplicationUrl.TrimEnd('/')}/main.aspx?etn={entityRef.LogicalName}&id={entityRef.Id}&pagetype=entityrecord";
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
         }
 
         internal void LoadAuditEntitiesAsync()

@@ -3,12 +3,17 @@ using Formula81.XrmToolBox.Tools.AuditGoggles.Models;
 using Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels;
 using System;
 using System.ComponentModel;
+using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace Formula81.XrmToolBox.Tools.AuditGoggles.Views
 {
     public partial class AuditGogglesView : UserControl
     {
+        private const double ChangesColumnMinWidth = 200;
+        private const double ChangesColumnPadding = 10;
+
         private readonly AuditGogglesPluginControl _auditGogglesPluginControl;
 
         public AuditEntityViewModel AuditEntityViewModel { get; }
@@ -34,7 +39,6 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Views
             CloseToolButton.Command = new RelayCommand(ExecuteCloseTool, CanExecuteCloseTool);
             RefreshButton.Command = new RelayCommand(ExecuteRefresh, CanExecuteRefresh);
 
-            AddAuditRecordButton.Command = AuditRecordViewModel.AddCommand;
             AddAuditRecordFXBButton.Command = AuditRecordViewModel.FxbCommand;
             ClearAuditRecordsButton.Command = AuditRecordViewModel.ClearCommand;
 
@@ -44,6 +48,12 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Views
 
             EditEntityAuditFiltersButton.Command = EntityAuditViewModel.EditFilters;
             EditEntityAuditColumnsButton.Command = EntityAuditViewModel.EditColumns;
+
+            var columnWidthDescriptor = DependencyPropertyDescriptor.FromProperty(GridViewColumn.WidthProperty, typeof(GridViewColumn));
+            foreach (var column in new[] { ChangedDateColumn, ChangedByColumn, RecordColumn, EventColumn })
+            {
+                columnWidthDescriptor.AddValueChanged(column, EntityAuditColumn_WidthChanged);
+            }
         }
 
         internal bool CanExecuteCloseTool(object parameter)
@@ -84,6 +94,25 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Views
                 }
                 EntityAuditViewModel?.ScrollChangedCommand.Execute(scrollChangedEventArgs);
             }
+        }
+
+        private void EntityAuditListView_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            UpdateChangesColumnWidth();
+        }
+
+        private void EntityAuditColumn_WidthChanged(object sender, EventArgs e)
+        {
+            UpdateChangesColumnWidth();
+        }
+
+        private void UpdateChangesColumnWidth()
+        {
+            // The Changes column fills the space the other (user resizable) columns leave
+            var otherColumnsWidth = new[] { ChangedDateColumn, ChangedByColumn, RecordColumn, EventColumn }
+                .Sum(c => double.IsNaN(c.Width) ? c.ActualWidth : c.Width);
+            var availableWidth = EntityAuditListView.ActualWidth - otherColumnsWidth - SystemParameters.VerticalScrollBarWidth - ChangesColumnPadding;
+            ChangesColumn.Width = Math.Max(ChangesColumnMinWidth, availableWidth);
         }
 
         private void AuditRecordViewModel_AuditRecordsChanged()

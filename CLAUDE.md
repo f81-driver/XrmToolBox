@@ -87,6 +87,8 @@ To debug, point XrmToolBox at that output or copy the DLL into the XrmToolBox `P
   `RelayCommand(Execute, CanExecute)` and `CanExecute` checks `!IsBusy`. `UpdateUI()` calls
   `CommandManager.InvalidateRequerySuggested()`.
 - Bindable models derive from `ObservableObject` and use `SetValue(nameof(Prop), value, ref _field)`.
+- Toolbar icons are Lucide icons stored as `Geometry` resources in `AuditGoggles/Resources/LucideIcons.xaml`
+  (no PNGs). Add new ones from `lucide-static`, converting circle/rect to path data, and keep the license header.
 - Dialogs are WPF `Window`s owned by the plugin handle via `WindowInteropHelper` and centered with `WindowUtility.CalculateCenter`.
 - Large `In` queries are chunked to 100 ids with `Queue.DequeueChunk(100)`.
 - Entity audits load with paging (`PagingInfo` + paging cookie) for infinite append scrolling; results come back as `EntityAuditResult`.

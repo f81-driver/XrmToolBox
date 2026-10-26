@@ -144,6 +144,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Resources\LucideIcons.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\AuditGogglesView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -164,28 +168,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\Images\multiple.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\Images\FXB-2019-Sticker-24.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\Images\broom.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\Images\circle-xmark.png" />
-    <Resource Include="Resources\Images\refresh.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\Images\progress-download.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\Images\filter.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\Images\columns.png" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="DockPanelSuite.ThemeVS2015">

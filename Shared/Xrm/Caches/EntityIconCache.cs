@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -19,11 +20,11 @@ namespace Formula81.XrmToolBox.Shared.Xrm.Caches
         private IOrganizationService _serviceClient;
         public IOrganizationService ServiceClient { get => _serviceClient ?? throw new InvalidOperationException(ServiceNotInitializedExceptionMessage); set => _serviceClient = value; }
 
-        private readonly Dictionary<string, byte[]> _entityIconCache;
+        private readonly ConcurrentDictionary<string, byte[]> _entityIconCache;
 
         private EntityIconCache()
         {
-            _entityIconCache = new Dictionary<string, byte[]>();
+            _entityIconCache = new ConcurrentDictionary<string, byte[]>();
         }
 
         public byte[] Get(EntityMetadata entityMetadata)
@@ -38,17 +39,27 @@ namespace Formula81.XrmToolBox.Shared.Xrm.Caches
 
         public IDictionary<string, byte[]> GetMany(IEnumerable<EntityMetadata> entityMetadatas)
         {
-            var uncachedEntityMetadatas = entityMetadatas.Where(em => !_entityIconCache.ContainsKey(em.LogicalName));
-            var entityIconDatas = XrmToolkit.GetSmallIconDatas(ServiceClient, uncachedEntityMetadatas); 
-            foreach (var uncachedEntityMetadata in uncachedEntityMetadatas.Where(uem => !entityIconDatas.ContainsKey(uem.LogicalName)))
+            var entityMetadataList = entityMetadatas.ToList();
+            var uncachedEntityMetadatas = entityMetadataList.Where(em => !_entityIconCache.ContainsKey(em.LogicalName)).ToList();
+            if (uncachedEntityMetadatas.Any())
             {
-                entityIconDatas[uncachedEntityMetadata.LogicalName] = null;
+                var uncachedIconDatas = XrmToolkit.GetSmallIconDatas(ServiceClient, uncachedEntityMetadatas);
+                foreach (var uncachedEntityMetadata in uncachedEntityMetadatas)
+                {
+                    _entityIconCache[uncachedEntityMetadata.LogicalName] = uncachedIconDatas.TryGetValue(uncachedEntityMetadata.LogicalName, out var iconData) ? iconData : null;
+                }
             }
-            foreach (var entityMetadata in entityMetadatas.Where(em => _entityIconCache.ContainsKey(em.LogicalName)))
+            var entityIconDatas = new Dictionary<string, byte[]>();
+            foreach (var entityMetadata in entityMetadataList)
             {
-                entityIconDatas[entityMetadata.LogicalName] = _entityIconCache[entityMetadata.LogicalName];
+                entityIconDatas[entityMetadata.LogicalName] = _entityIconCache.TryGetValue(entityMetadata.LogicalName, out var iconData) ? iconData : null;
             }
             return entityIconDatas;
+        }
+
+        public void Clear()
+        {
+            _entityIconCache.Clear();
         }
 
         public bool TryGet(EntityMetadata entityMetadata, out byte[] iconData)

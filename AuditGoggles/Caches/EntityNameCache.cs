@@ -1,9 +1,12 @@
 ﻿using Formula81.XrmToolBox.Shared.Core.Extensions;
+using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using Microsoft.Xrm.Tooling.Connector;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.ServiceModel;
 using System.Threading;
 
 namespace Formula81.XrmToolBox.Tools.AuditGoggles.Caches
@@ -20,34 +23,43 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Caches
         private CrmServiceClient _serviceClient;
         public CrmServiceClient ServiceClient { get => _serviceClient ?? throw new InvalidOperationException(ServiceNotInitializedExceptionMessage); set { _serviceClient = value; } }
 
-        private readonly Dictionary<string, Dictionary<Guid, string>> _entityNameCache;
+        private readonly ConcurrentDictionary<string, ConcurrentDictionary<Guid, string>> _entityNameCache;
+        // Ids that were looked up but do not exist (anymore), so they are not retrieved again
+        private readonly ConcurrentDictionary<string, ConcurrentDictionary<Guid, bool>> _missingIdCache;
 
         private EntityNameCache()
         {
-            _entityNameCache = new Dictionary<string, Dictionary<Guid, string>>();
+            _entityNameCache = new ConcurrentDictionary<string, ConcurrentDictionary<Guid, string>>();
+            _missingIdCache = new ConcurrentDictionary<string, ConcurrentDictionary<Guid, bool>>();
         }
 
         public IEnumerable<Guid> Uncached(string logicalName, IEnumerable<Guid> ids)
         {
             var entityNames = GetEntityNames(logicalName);
-            return ids.Where(i => !entityNames.ContainsKey(i));
+            var missingIds = GetMissingIds(logicalName);
+            return ids.Where(i => !entityNames.ContainsKey(i) && !missingIds.ContainsKey(i))
+                .Distinct()
+                .ToList();
         }
 
         public void Upsert(string logicalName, IDictionary<Guid, string> upsertEntityNames)
         {
             var entityNames = GetEntityNames(logicalName);
+            var missingIds = GetMissingIds(logicalName);
             foreach (var upsertEntityName in upsertEntityNames)
             {
                 entityNames[upsertEntityName.Key] = upsertEntityName.Value;
+                missingIds.TryRemove(upsertEntityName.Key, out _);
             }
         }
 
         public string Get(string logicalName, Guid id)
         {
-            var entityNames = GetEntityNames(logicalName);
-            if (!entityNames.TryGetValue(id, out var name))
+            if (!GetEntityNames(logicalName).TryGetValue(id, out var name)
+                && !GetMissingIds(logicalName).ContainsKey(id))
             {
-                name = GetEntityName(logicalName, id);
+                CacheEntities(logicalName, new[] { id });
+                GetEntityNames(logicalName).TryGetValue(id, out name);
             }
             return name;
         }
@@ -65,24 +77,40 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Caches
                 .ToDictionary(en => en.Key, en => en.Value);
         }
 
-        private Dictionary<Guid, string> GetEntityNames(string logicalName)
+        public void Prefetch(IEnumerable<EntityReference> entityRefs)
         {
-            if (!_entityNameCache.TryGetValue(logicalName, out var entityNames))
+            foreach (var entityRefGroup in entityRefs.Where(er => er != null && !string.IsNullOrEmpty(er.LogicalName))
+                .GroupBy(er => er.LogicalName))
             {
-                entityNames = new Dictionary<Guid, string>();
-                _entityNameCache[logicalName] = entityNames;
+                var uncached = Uncached(entityRefGroup.Key, entityRefGroup.Select(er => er.Id));
+                if (uncached.Any())
+                {
+                    try
+                    {
+                        CacheEntities(entityRefGroup.Key, uncached);
+                    }
+                    catch (FaultException<OrganizationServiceFault>)
+                    {
+                        // Prefetching is an optimization only, names that failed are retrieved on demand by Get
+                    }
+                }
             }
-            return entityNames;
         }
 
-        private string GetEntityName(string logicalName, Guid id)
+        public void Clear()
         {
-            var entityMetadata = ServiceClient.GetEntityMetadata(logicalName);
-            var entity = ServiceClient.Retrieve(logicalName, id, new ColumnSet(entityMetadata.PrimaryNameAttribute));
-            var name = entity?.GetAttributeValue<string>(entityMetadata.PrimaryNameAttribute);
-            var entityNames = GetEntityNames(logicalName);
-            entityNames[id] = name;
-            return name;
+            _entityNameCache.Clear();
+            _missingIdCache.Clear();
+        }
+
+        private ConcurrentDictionary<Guid, string> GetEntityNames(string logicalName)
+        {
+            return _entityNameCache.GetOrAdd(logicalName, _ => new ConcurrentDictionary<Guid, string>());
+        }
+
+        private ConcurrentDictionary<Guid, bool> GetMissingIds(string logicalName)
+        {
+            return _missingIdCache.GetOrAdd(logicalName, _ => new ConcurrentDictionary<Guid, bool>());
         }
 
         private void CacheEntities(string logicalName, IEnumerable<Guid> ids)
@@ -90,9 +118,10 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Caches
             var idQueue = new Queue<Guid>(ids);
             var entityMetadata = ServiceClient.GetEntityMetadata(logicalName);
             var entityNames = GetEntityNames(logicalName);
+            var missingIds = GetMissingIds(logicalName);
             while (idQueue.Count > 0)
             {
-                var idChunk = idQueue.DequeueChunk(100);
+                var idChunk = idQueue.DequeueChunk(100).ToList();
                 var query = new QueryExpression(entityMetadata.LogicalName)
                 {
                     ColumnSet = new ColumnSet(entityMetadata.PrimaryIdAttribute, entityMetadata.PrimaryNameAttribute),
@@ -108,6 +137,10 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Caches
                 foreach (var entity in entities.Entities)
                 {
                     entityNames[entity.Id] = entity.GetAttributeValue<string>(entityMetadata.PrimaryNameAttribute);
+                }
+                foreach (var missingId in idChunk.Where(i => !entityNames.ContainsKey(i)))
+                {
+                    missingIds[missingId] = true;
                 }
             }
         }

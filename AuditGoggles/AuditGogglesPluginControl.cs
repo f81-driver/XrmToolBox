@@ -47,6 +47,10 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
 
         private readonly AuditGogglesView _auditGogglesView;
 
+        private List<EntityAuditConditionPair> _entityAuditConditionList;
+        private Dictionary<string, Dictionary<Guid, Entity>> _entityAuditDatas;
+        private Dictionary<string, EntityMetadata> _entityAuditMetadatas;
+
         public AuditGogglesSettings Settings { get; private set; }
 
         public string RepositoryName => GitHubRepositoryName;
@@ -85,7 +89,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
 
         internal void CallFxbPlugin()
         {
-            OnOutgoingMessage(this, new MessageBusEventArgs(FetchXmlBuilderSourcePluginName)
+            OnOutgoingMessage?.Invoke(this, new MessageBusEventArgs(FetchXmlBuilderSourcePluginName)
             {
                 TargetArgument = null
             });
@@ -275,34 +279,19 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
                         var colorCombos = auditRecords.ToDictionary(ar => ar.Id, ar => ar.ColorCombination);
                         var auditList = new List<Audit>();
 
-                        var entityAuditConditionList = new List<EntityAuditConditionPair>();
-                        var data = new Dictionary<string, Dictionary<Guid, Entity>>();
-                        var entityMetadatas = new Dictionary<string, EntityMetadata>();
-                        var auditRecordGroups = auditRecords.GroupBy(er => er.EntityLogicalName, er => er.Id);
-                        foreach (var auditRecordGroup in auditRecordGroups)
+                        // Metadata, records and conditions only change on a new load, so reuse them while scrolling
+                        if (pageInfo.PageNumber <= 1 || _entityAuditMetadatas == null)
                         {
-                            var entityMetadata = ServiceClient.GetEntityMetadata(auditRecordGroup.Key, EntityFilters.Attributes);
-                            entityMetadatas[auditRecordGroup.Key] = entityMetadata;
-
-                            var entities = RetrieveEntities(entityMetadata, auditRecordGroup.Select(g => g), EntityAuditHelper.GetEntityAuditEntityColumns(entityMetadata));
-                            data[auditRecordGroup.Key] = entities.ToDictionary(e => e.Id, e => e);
-                            EntityNameCache.Instance.Upsert(auditRecordGroup.Key, entities.ToDictionary(e => e.Id, e => e.GetAttributeValue<string>(entityMetadata.PrimaryNameAttribute)));
-
-                            if (entityMetadata?.IsAuditEnabled?.Value ?? false)
-                            {
-                                var attributes = entityMetadata.Attributes.Where(am => am.ColumnNumber.HasValue)
-                                    .ToDictionary(am => am.LogicalName, am => am.ColumnNumber.Value);
-                                var columnSet = (columns?.TryGetValue(entityMetadata.LogicalName, out var cs) ?? false) ? cs : null;
-                                var attributeMasks = columnSet?.Columns?.Select(c => attributes.TryGetValue(c, out var mask) ? (int?)mask : null)
-                                    .Where(m => m.HasValue)
-                                    .Select(m => m.Value) ?? Enumerable.Empty<int>();
-                                entityAuditConditionList.Add(new EntityAuditConditionPair(auditRecordGroup, attributeMasks));
-                            }
+                            PrepareEntityAuditLoad(auditRecords, columns);
                         }
+                        var entityAuditConditionList = _entityAuditConditionList;
+                        var data = _entityAuditDatas;
+                        var entityMetadatas = _entityAuditMetadatas;
 
                         auditList.AddRange(RetrieveAudits(entityAuditConditionList, criteriaConditions, orderType, pageInfo,
                             out var pagingCookie, out var moreRecords, out var totalRecordCount, out var totalRecordCountLimitExceeded));
                         var entityAuditHelper = new EntityAuditHelper(ServiceClient);
+                        entityAuditHelper.PrefetchLookupNames(auditList, entityMetadatas);
                         var entityAudits = auditList.Select(a => entityAuditHelper.ParseAudit(a,
                                     data[a.ObjectId.LogicalName][a.ObjectId.Id],
                                     entityMetadatas[a.ObjectId.LogicalName],
@@ -330,6 +319,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
                         }
                         finally
                         {
+                            _auditGogglesView.EntityAuditViewModel.EndLoad();
                             IsBusy = false;
                         }
                     },
@@ -339,6 +329,45 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
             {
                 _auditGogglesView.EntityAuditViewModel.ApplyEntityAuditResult(EntityAuditResult.Empty);
             }
+        }
+
+        private void PrepareEntityAuditLoad(IEnumerable<AuditRecord> auditRecords, IDictionary<string, ColumnSet> columns)
+        {
+            var entityAuditConditionList = new List<EntityAuditConditionPair>();
+            var data = new Dictionary<string, Dictionary<Guid, Entity>>();
+            var entityMetadatas = new Dictionary<string, EntityMetadata>();
+            var auditRecordGroups = auditRecords.GroupBy(er => er.EntityLogicalName, er => er.Id);
+            foreach (var auditRecordGroup in auditRecordGroups)
+            {
+                var entityMetadata = ServiceClient.GetEntityMetadata(auditRecordGroup.Key, EntityFilters.Attributes);
+                entityMetadatas[auditRecordGroup.Key] = entityMetadata;
+
+                var entities = RetrieveEntities(entityMetadata, auditRecordGroup.Select(g => g), EntityAuditHelper.GetEntityAuditEntityColumns(entityMetadata));
+                data[auditRecordGroup.Key] = entities.ToDictionary(e => e.Id, e => e);
+                EntityNameCache.Instance.Upsert(auditRecordGroup.Key, entities.ToDictionary(e => e.Id, e => e.GetAttributeValue<string>(entityMetadata.PrimaryNameAttribute)));
+
+                if (entityMetadata?.IsAuditEnabled?.Value ?? false)
+                {
+                    var attributes = entityMetadata.Attributes.Where(am => am.ColumnNumber.HasValue)
+                        .ToDictionary(am => am.LogicalName, am => am.ColumnNumber.Value);
+                    var columnSet = (columns?.TryGetValue(entityMetadata.LogicalName, out var cs) ?? false) ? cs : null;
+                    var attributeMasks = columnSet?.Columns?.Select(c => attributes.TryGetValue(c, out var mask) ? (int?)mask : null)
+                        .Where(m => m.HasValue)
+                        .Select(m => m.Value)
+                        .ToList() ?? Enumerable.Empty<int>();
+                    entityAuditConditionList.Add(new EntityAuditConditionPair(auditRecordGroup.ToList(), attributeMasks));
+                }
+            }
+            _entityAuditConditionList = entityAuditConditionList;
+            _entityAuditDatas = data;
+            _entityAuditMetadatas = entityMetadatas;
+        }
+
+        private void ResetEntityAuditLoad()
+        {
+            _entityAuditConditionList = null;
+            _entityAuditDatas = null;
+            _entityAuditMetadatas = null;
         }
 
         public override void ClosingPlugin(PluginCloseInfo info)
@@ -353,8 +382,11 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
 
             _auditGogglesView.AuditRecordViewModel.Clear();
             _auditGogglesView.EntityAuditViewModel.Clear();
+            ResetEntityAuditLoad();
 
+            EntityIconCache.Instance.Clear();
             EntityIconCache.Instance.ServiceClient = e.ConnectionDetail.ServiceClient;
+            EntityNameCache.Instance.Clear();
             EntityNameCache.Instance.ServiceClient = e.ConnectionDetail.ServiceClient;
 
             LoadSettings();
@@ -431,11 +463,16 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
                 var objectFilter = query.Criteria.AddFilter(LogicalOperator.Or);
                 foreach (var entityAuditConditionPair in entityAuditConditionPairs)
                 {
-                    var fitler = objectFilter.AddFilter(LogicalOperator.And);
-                    fitler.AddCondition(new ConditionExpression(Audit.ColumnNames.ObjectId, ConditionOperator.In, entityAuditConditionPair.ObjectIds.ToArray()));
-                    foreach (var attributeMask in entityAuditConditionPair.AttributeMasks)
+                    var filter = objectFilter.AddFilter(LogicalOperator.And);
+                    filter.AddCondition(new ConditionExpression(Audit.ColumnNames.ObjectId, ConditionOperator.In, entityAuditConditionPair.ObjectIds.ToArray()));
+                    if (entityAuditConditionPair.AttributeMasks.Any())
                     {
-                        fitler.AddCondition(new ConditionExpression(Audit.ColumnNames.AttributeMask, ConditionOperator.Like, attributeMask));
+                        // AttributeMask is stored as ",5,12,", so match any selected column number anywhere in the list
+                        var attributeMaskFilter = filter.AddFilter(LogicalOperator.Or);
+                        foreach (var attributeMask in entityAuditConditionPair.AttributeMasks)
+                        {
+                            attributeMaskFilter.AddCondition(new ConditionExpression(Audit.ColumnNames.AttributeMask, ConditionOperator.Like, $"%,{attributeMask},%"));
+                        }
                     }
                 }
 
@@ -444,7 +481,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
                     query.Criteria.Conditions.AddRange(criteriaConditions);
                 }
 
-                var results = Service.RetrieveMultiple(query);
+                var results = ServiceClient.RetrieveMultiple(query);
                 pagingCookie = results.PagingCookie;
                 moreRecords = results.MoreRecords;
                 totalRecordCount = results.TotalRecordCount;
@@ -479,7 +516,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles
                             }
                         }
                     };
-                    var entities = Service.RetrieveMultiple(query).Entities;
+                    var entities = ServiceClient.RetrieveMultiple(query).Entities;
                     entityList.AddRange(entities);
                 }
             }

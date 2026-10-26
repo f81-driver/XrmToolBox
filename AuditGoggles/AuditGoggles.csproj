@@ -92,6 +92,7 @@
     <Compile Include="AuditGogglesPluginControl.designer.cs">
       <DependentUpon>AuditGogglesPluginControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\CsvExportHelper.cs" />
     <Compile Include="Helpers\EntityAuditHelper.cs" />
     <Compile Include="Helpers\FetchXmlHelper.cs" />
     <Compile Include="Mocks\AuditEntityItemsControlItemsSource.cs" />
@@ -126,6 +127,9 @@
     </Compile>
     <Compile Include="Windows\EntityAuditCriteriaWindow.xaml.cs">
       <DependentUpon>EntityAuditCriteriaWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Windows\EntityAuditDetailWindow.xaml.cs">
+      <DependentUpon>EntityAuditDetailWindow.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -165,6 +169,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Windows\EntityAuditCriteriaWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Windows\EntityAuditDetailWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

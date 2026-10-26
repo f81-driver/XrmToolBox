@@ -2,7 +2,10 @@
 using Formula81.XrmToolBox.Shared.Parts.Input;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Components;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Events;
+using Formula81.XrmToolBox.Tools.AuditGoggles.Helpers;
 using Formula81.XrmToolBox.Tools.AuditGoggles.Models;
+using Microsoft.Win32;
+using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using System;
 using System.Collections.Generic;
@@ -10,6 +13,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -62,6 +66,11 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         public ICommand EditFilters { get; }
         public ICommand EditColumns { get; }
         public ICommand ScrollChangedCommand { get; }
+        public ICommand ExportCommand { get; }
+        public ICommand ShowDetailsCommand { get; }
+        public ICommand OpenInBrowserCommand { get; }
+        public ICommand CopyCommand { get; }
+        public ICommand AddAuditRecordCommand { get; }
 
         public ObservableCollection<EntityAudit> _entityAuditCollection;
         private IEnumerable<ConditionExpression> _criteriaConditions;
@@ -94,6 +103,141 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
             EditFilters = new RelayCommand(ExecuteEditFilters, CanExecuteEditFilters);
             EditColumns = new RelayCommand(ExecuteEditColumns, CanExecuteEditColumns);
             ScrollChangedCommand = new RelayCommand(ExecuteScrollChanged, CanExecuteScrollChanged);
+            ExportCommand = new RelayCommand(ExecuteExport, CanExecuteExport);
+            ShowDetailsCommand = new RelayCommand(ExecuteShowDetails, CanExecuteShowDetails);
+            OpenInBrowserCommand = new RelayCommand(ExecuteOpenInBrowser, CanExecuteOpenInBrowser);
+            CopyCommand = new RelayCommand(ExecuteCopy, CanExecuteCopy);
+            AddAuditRecordCommand = new RelayCommand(ExecuteAddAuditRecord, CanExecuteAddAuditRecord);
+        }
+
+        internal bool CanExecuteExport(object parameter)
+        {
+            return !_auditGogglesPluginControl.IsBusy
+                && _entityAuditCollection.Count > 0;
+        }
+
+        internal bool CanExecuteShowDetails(object parameter)
+        {
+            return parameter is EntityAudit;
+        }
+
+        internal bool CanExecuteOpenInBrowser(object parameter)
+        {
+            return ToEntityReference(parameter) != null;
+        }
+
+        internal bool CanExecuteCopy(object parameter)
+        {
+            return !string.IsNullOrEmpty(parameter?.ToString());
+        }
+
+        internal bool CanExecuteAddAuditRecord(object parameter)
+        {
+            return !_auditGogglesPluginControl.IsBusy
+                && ToEntityReference(parameter) != null;
+        }
+
+        internal void ExecuteExport(object parameter)
+        {
+            try
+            {
+                var saveFileDialog = new SaveFileDialog
+                {
+                    Title = "Export Audits",
+                    Filter = "CSV files (*.csv)|*.csv",
+                    FileName = $"AuditGoggles_{DateTime.Now:yyyyMMdd_HHmmss}.csv"
+                };
+                if (saveFileDialog.ShowDialog() ?? false)
+                {
+                    CsvExportHelper.Export(saveFileDialog.FileName, _entityAuditCollection.ToList());
+                }
+            }
+            catch (Exception exception)
+            {
+                _auditGogglesPluginControl.ShowErrorDialog(exception, "Export Audits");
+            }
+        }
+
+        internal void ExecuteShowDetails(object parameter)
+        {
+            try
+            {
+                if (parameter is EntityAudit entityAudit)
+                {
+                    _auditGogglesPluginControl.ShowEntityAuditDetailDialog(entityAudit);
+                }
+            }
+            catch (Exception exception)
+            {
+                _auditGogglesPluginControl.ShowErrorDialog(exception, "Show Audit Details");
+            }
+        }
+
+        internal void ExecuteOpenInBrowser(object parameter)
+        {
+            try
+            {
+                _auditGogglesPluginControl.OpenInBrowser(ToEntityReference(parameter));
+            }
+            catch (Exception exception)
+            {
+                _auditGogglesPluginControl.ShowErrorDialog(exception, "Open in Browser");
+            }
+        }
+
+        internal void ExecuteCopy(object parameter)
+        {
+            try
+            {
+                Clipboard.SetText(parameter.ToString());
+            }
+            catch (Exception exception)
+            {
+                _auditGogglesPluginControl.ShowErrorDialog(exception, "Copy");
+            }
+        }
+
+        internal void ExecuteAddAuditRecord(object parameter)
+        {
+            try
+            {
+                _auditGogglesPluginControl.AddAuditRecords(new[] { ToEntityReference(parameter) });
+            }
+            catch (Exception exception)
+            {
+                _auditGogglesPluginControl.ShowErrorDialog(exception, "Add Audit Record");
+            }
+        }
+
+        private static EntityReference ToEntityReference(object parameter)
+        {
+            switch (parameter)
+            {
+                case EntityLookupValue entityLookupValue:
+                    return new EntityReference(entityLookupValue.EntityLogicalName, entityLookupValue.Id);
+                case EntityAuditValue entityAuditValue:
+                    return entityAuditValue.Value as EntityReference;
+                default:
+                    return null;
+            }
+        }
+
+        protected override void OnPropertyChanged(string propertyName)
+        {
+            if (propertyName == nameof(SortDirection))
+            {
+                ReloadIfInitiated();
+            }
+        }
+
+        private void ReloadIfInitiated()
+        {
+            if (IsInitiated
+                && !IsLoading
+                && !_auditGogglesPluginControl.IsBusy)
+            {
+                ExecuteLoad(null);
+            }
         }
 
         internal bool CanExecuteLoad(object parameter)
@@ -136,9 +280,16 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         {
             try
             {
-                _criteriaConditions = _auditGogglesPluginControl.ShowEntityAuditFilterDialog(_criteriaConditions);
+                var criteriaConditions = _auditGogglesPluginControl.ShowEntityAuditFilterDialog(_criteriaConditions);
+                // The dialog returns the same instance when cancelled
+                var isChanged = !ReferenceEquals(criteriaConditions, _criteriaConditions);
+                _criteriaConditions = criteriaConditions;
                 FilterCount = _criteriaConditions?.Count() ?? 0;
                 HasFilters = FilterCount > 0;
+                if (isChanged)
+                {
+                    ReloadIfInitiated();
+                }
             }
             catch (Exception exception)
             {
@@ -150,11 +301,18 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         {
             try
             {
-                _columns = _auditGogglesPluginControl.ShowEntityAuditColumnsDialog(_columns)?
+                var columns = _auditGogglesPluginControl.ShowEntityAuditColumnsDialog(_columns);
+                // The dialog returns the same instance when cancelled
+                var isChanged = !ReferenceEquals(columns, _columns);
+                _columns = columns?
                     .Where(c => !c.Value.AllColumns)
                     .ToDictionary(c => c.Key, c => c.Value);
                 ColumnCount = _columns?.Count() ?? 0;
                 HasColumns = ColumnCount > 0;
+                if (isChanged)
+                {
+                    ReloadIfInitiated();
+                }
             }
             catch (Exception exception)
             {

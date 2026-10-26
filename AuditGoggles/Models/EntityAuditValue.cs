@@ -8,6 +8,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Models
         public object DisplayValue { get; }
 
         public bool IsEntityReference { get => Value is EntityReference; }
+        public string DisplayText { get => DisplayValue?.ToString(); }
 
         public EntityAuditValue(object value, object displayValue)
         {
@@ -17,7 +18,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Models
 
         public override string ToString()
         {
-            return DisplayValue?.ToString();
+            return DisplayText;
         }
     }
 }

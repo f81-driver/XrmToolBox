@@ -19,6 +19,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
     public class EntityAuditViewModel : ObservableObject
     {
         private const int PageSize = 100;
+        private const int TotalRecordCountLimit = 5000;
 
         private readonly AuditGogglesPluginControl _auditGogglesPluginControl;
 
@@ -48,6 +49,12 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         private int _total;
         public int Total { get => _total; private set => SetValue(nameof(Total), value, ref _total); }
 
+        private string _statusText;
+        public string StatusText { get => _statusText; private set => SetValue(nameof(StatusText), value, ref _statusText); }
+
+        private bool _isLoading;
+        public bool IsLoading { get => _isLoading; private set => SetValue(nameof(IsLoading), value, ref _isLoading); }
+
         private ListSortDirection _sortDirection;
         public ListSortDirection SortDirection { get => _sortDirection; set => SetValue(nameof(SortDirection), value, ref _sortDirection); }
 
@@ -63,7 +70,6 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         private int _pageNumber = 1;
         private string _pagingCookie;
         private bool _hasMoreRecords = true;
-        private bool _isLoading;
 
         private ScrollChangedEventArgs _lastScrollArgs;
 
@@ -161,13 +167,15 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
             _pageNumber = 1;
             _pagingCookie = null;
             _hasMoreRecords = true;
-            _isLoading = false;
+            IsLoading = false;
             _entityAuditCollection.Clear();
+            Count = 0;
+            StatusText = null;
         }
 
         internal void EndLoad()
         {
-            _isLoading = false;
+            IsLoading = false;
         }
 
         internal void ApplyEntityAuditResult(EntityAuditResult entityAuditResult)
@@ -184,13 +192,16 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
                 _entityAuditCollection.Add(entityAudit);
             }
 
-            _isLoading = false;
+            IsLoading = false;
 
             Count = _entityAuditCollection.Count;
             if (!entityAuditResult.TotalRecordCountLimitExceeded)
             {
                 Total = entityAuditResult.TotalRecordCount;
             }
+            // Dataverse stops counting at 5000, so the real total is unknown beyond that
+            var totalText = entityAuditResult.TotalRecordCountLimitExceeded ? $"{TotalRecordCountLimit:N0}+" : $"{Total:N0}";
+            StatusText = $"Showing {Count:N0} of {totalText} audits";
         }
 
         internal void Terminate(bool anyAuditRecords)
@@ -226,7 +237,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
             if (_isLoading || !_hasMoreRecords)
                 return;
 
-            _isLoading = true;
+            IsLoading = true;
 
             var orderType = SortDirection == ListSortDirection.Ascending ? OrderType.Ascending : OrderType.Descending;
             var pageInfo = new PagingInfo { Count = PageSize, PageNumber = _pageNumber, PagingCookie = _pagingCookie };

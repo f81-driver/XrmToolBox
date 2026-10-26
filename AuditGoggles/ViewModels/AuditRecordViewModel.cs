@@ -20,6 +20,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
         private readonly List<ColorCombination> _usedColorCombinationList = new List<ColorCombination>();
         private readonly ObservableCollection<AuditRecord> _auditRecordCollection;
         private readonly HashSet<Guid> _auditRecordIdSet;
+        private bool _isRemovingDeleted;
 
         public IEnumerable<AuditRecord> AuditRecords { get => _auditRecordCollection; }
         private int AuditRecordCount { get => _auditRecordCollection.Count; }
@@ -179,6 +180,23 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
             _auditRecordCollection.Clear();
         }
 
+        internal void RemoveDeleted(IEnumerable<AuditRecord> deletedAuditRecords)
+        {
+            // The running Entity Audit load already excludes these, so it should not be terminated
+            _isRemovingDeleted = true;
+            try
+            {
+                foreach (var deletedAuditRecord in deletedAuditRecords.ToList())
+                {
+                    _auditRecordCollection.Remove(deletedAuditRecord);
+                }
+            }
+            finally
+            {
+                _isRemovingDeleted = false;
+            }
+        }
+
         public bool ContainsId(Guid id)
         {
             return _auditRecordIdSet?.Contains(id) ?? false;
@@ -220,7 +238,10 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.ViewModels
                     }
                 }
             }
-            AuditRecordsChanged?.Invoke();
+            if (!_isRemovingDeleted)
+            {
+                AuditRecordsChanged?.Invoke();
+            }
         }
 
         private void AuditRecord_PropertyChanged(object sender, PropertyChangedEventArgs e)

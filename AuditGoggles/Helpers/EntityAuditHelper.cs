@@ -341,7 +341,9 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Helpers
                         displayValue = nameToken?.Value<string>();
                         break;
                     case AttributeTypeCode.Uniqueidentifier:
-                        value = valueToken.Value<Guid?>();
+                        // Guids are stored as strings in the change data
+                        value = Guid.TryParse(valueToken.Value<string>(), out var guidValue) ? (Guid?)guidValue : null;
+                        displayValue = value?.ToString();
                         break;
                     //case AttributeTypeCode.CalendarRules: break;
                     //case AttributeTypeCode.Virtual: break;

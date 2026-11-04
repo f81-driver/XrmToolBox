@@ -1,5 +1,11 @@
 # Release History
 
+## Unreleased
+
+### Other Changes
+
+- Restyled the entity filter box: search icon, placeholder text, and a clear button inside the box that only shows while there is text. Esc clears the filter
+
 ## 1.0.25353 (2025-12-19)
 
 ### Features Added

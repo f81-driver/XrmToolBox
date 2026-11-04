@@ -1,0 +1,932 @@
+﻿<UserControl x:Name="MetaScannerViewRoot"
+             x:Class="Formula81.XrmToolBox.Tools.MetaScanner.Views.MetaScannerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:localmocks="clr-namespace:Formula81.XrmToolBox.Tools.MetaScanner.Mocks"
+             xmlns:localmodels="clr-namespace:Formula81.XrmToolBox.Tools.MetaScanner.Models"
+             xmlns:localviewmodels="clr-namespace:Formula81.XrmToolBox.Tools.MetaScanner.ViewModels"
+             xmlns:f81partscontrols="clr-namespace:Formula81.XrmToolBox.Shared.Parts.Controls"
+             xmlns:f81xrmpartsconverters="clr-namespace:Formula81.XrmToolBox.Shared.XrmParts.Converters"
+             mc:Ignorable="d"
+             d:DesignHeight="760" d:DesignWidth="1200">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Formula81.XrmToolBox.Tools.MetaScanner;component/Resources/LucideIcons.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <f81xrmpartsconverters:IIconifiableToImageConverter x:Key="IIconifiableToImageConverter" />
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+            <!-- Same orange as the plugin tile in XrmToolBox -->
+            <SolidColorBrush x:Key="AccentBrush" Color="#FF8000" />
+            <SolidColorBrush x:Key="AccentLightBrush" Color="#FFE9D2" />
+            <SolidColorBrush x:Key="AccentDarkBrush" Color="#9A4D00" />
+            <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#FAFAFA" />
+            <SolidColorBrush x:Key="DividerBrush" Color="#E0E0E0" />
+
+            <Style x:Key="EmptyHintTextBlockStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="DimGray" />
+                <Setter Property="FontStyle" Value="Italic" />
+                <Setter Property="Margin" Value="8" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="IsHitTestVisible" Value="False" />
+            </Style>
+
+            <Style x:Key="CaptionTextBlockStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="DimGray" />
+                <Setter Property="FontSize" Value="11" />
+            </Style>
+
+            <Style x:Key="CountTextBlockStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="DimGray" />
+                <Setter Property="Margin" Value="8,0,4,0" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <!-- Selectable, borderless text so any name can be selected and copied -->
+            <Style x:Key="ReadOnlyTextBoxStyle" TargetType="TextBox">
+                <Setter Property="IsReadOnly" Value="True" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+
+            <Style x:Key="FilterBarStyle" TargetType="StackPanel">
+                <Setter Property="Orientation" Value="Horizontal" />
+                <Setter Property="Margin" Value="4" />
+            </Style>
+
+            <Style x:Key="FilterComboBoxStyle" TargetType="ComboBox">
+                <Setter Property="Width" Value="150" />
+                <Setter Property="Margin" Value="6,0,0,0" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="FilterCheckBoxStyle" TargetType="CheckBox">
+                <Setter Property="Margin" Value="10,0,0,0" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="IconButtonStyle" TargetType="Button">
+                <Setter Property="Margin" Value="6,0,0,0" />
+                <Setter Property="Padding" Value="4,1" />
+                <Setter Property="Background" Value="Transparent" />
+            </Style>
+
+            <Style x:Key="MetaDataGridStyle" TargetType="DataGrid">
+                <Setter Property="AutoGenerateColumns" Value="False" />
+                <Setter Property="IsReadOnly" Value="True" />
+                <Setter Property="CanUserAddRows" Value="False" />
+                <Setter Property="CanUserDeleteRows" Value="False" />
+                <Setter Property="CanUserReorderColumns" Value="True" />
+                <Setter Property="CanUserResizeColumns" Value="True" />
+                <Setter Property="CanUserSortColumns" Value="True" />
+                <Setter Property="SelectionMode" Value="Single" />
+                <Setter Property="SelectionUnit" Value="FullRow" />
+                <Setter Property="HeadersVisibility" Value="Column" />
+                <Setter Property="GridLinesVisibility" Value="Horizontal" />
+                <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource DividerBrush}" />
+                <Setter Property="AlternatingRowBackground" Value="#F7F7F7" />
+                <Setter Property="Background" Value="White" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="RowHeaderWidth" Value="0" />
+                <Setter Property="EnableRowVirtualization" Value="True" />
+                <Setter Property="ClipboardCopyMode" Value="ExcludeHeader" />
+            </Style>
+
+            <Style x:Key="CenteredCheckBoxStyle" TargetType="CheckBox">
+                <Setter Property="HorizontalAlignment" Value="Center" />
+                <Setter Property="IsHitTestVisible" Value="False" />
+            </Style>
+
+            <Style x:Key="WrappingTextBlockStyle" TargetType="TextBlock">
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+
+            <!-- Context menu of a table in the list; Tag of the item is the EntityListViewModel -->
+            <ContextMenu x:Key="MetaEntityContextMenu" x:Shared="False">
+                <MenuItem Header="Copy Logical Name"
+                          Command="{Binding PlacementTarget.Tag.CopyCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                          CommandParameter="{Binding LogicalName}">
+                    <MenuItem.Icon>
+                        <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                            <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideCopy}" />
+                        </Viewbox>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Copy Schema Name"
+                          Command="{Binding PlacementTarget.Tag.CopyCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                          CommandParameter="{Binding SchemaName}" />
+                <MenuItem Header="Copy Display Name"
+                          Command="{Binding PlacementTarget.Tag.CopyCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                          CommandParameter="{Binding DisplayName}" />
+                <Separator />
+                <MenuItem Command="{Binding PlacementTarget.Tag.FavorizeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                          CommandParameter="{Binding}">
+                    <MenuItem.Style>
+                        <Style TargetType="MenuItem">
+                            <Setter Property="Header" Value="Add to Favorites" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsFavorite}" Value="True">
+                                    <Setter Property="Header" Value="Remove from Favorites" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </MenuItem.Style>
+                    <MenuItem.Icon>
+                        <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                            <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideStar}" />
+                        </Viewbox>
+                    </MenuItem.Icon>
+                </MenuItem>
+            </ContextMenu>
+
+            <DataTemplate x:Key="MetaEntityDataTemplate" DataType="localmodels:MetaEntity">
+                <Grid Height="34" ToolTip="{Binding ToolTip}" Background="Transparent">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="24" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="22" />
+                    </Grid.ColumnDefinitions>
+                    <Image Width="22" Height="22" Source="{Binding Converter={StaticResource IIconifiableToImageConverter}}" Stretch="None" />
+                    <StackPanel Grid.Column="1" Margin="4,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding DisplayName}" FontSize="13" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding LogicalName}" Style="{StaticResource CaptionTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <!-- Favorite star: always shown for favorites, otherwise only on hover -->
+                    <Button Grid.Column="2" Focusable="False" Cursor="Hand"
+                            Command="{Binding DataContext.FavorizeCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                            CommandParameter="{Binding}">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="Transparent">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Visibility" Value="Hidden" />
+                                <Setter Property="ToolTip" Value="Add to Favorites" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsFavorite}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                        <Setter Property="ToolTip" Value="Remove from Favorites" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <Viewbox Width="16" Height="16">
+                            <Path Data="{StaticResource LucideStar}">
+                                <Path.Style>
+                                    <Style TargetType="Path" BasedOn="{StaticResource LucideIconStyle}">
+                                        <Setter Property="Stroke" Value="Gray" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsFavorite}" Value="True">
+                                                <Setter Property="Stroke" Value="{StaticResource AccentBrush}" />
+                                                <Setter Property="Fill" Value="{StaticResource AccentBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Path.Style>
+                            </Path>
+                        </Viewbox>
+                    </Button>
+                </Grid>
+            </DataTemplate>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <DockPanel>
+        <ToolBarTray DockPanel.Dock="Top" IsLocked="True">
+            <ToolBar>
+                <Button x:Name="CloseToolButton">
+                    <WrapPanel>
+                        <Viewbox Style="{StaticResource LucideIconViewboxStyle}">
+                            <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideCircleX}" />
+                        </Viewbox>
+                        <Label Content="Close" />
+                    </WrapPanel>
+                </Button>
+                <Separator />
+                <Button x:Name="RefreshButton" ToolTip="Reload all metadata">
+                    <WrapPanel>
+                        <Viewbox Style="{StaticResource LucideIconViewboxStyle}">
+                            <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideRefreshCw}" />
+                        </Viewbox>
+                        <Label Content="Refresh" />
+                    </WrapPanel>
+                </Button>
+                <Separator />
+                <Grid Width="320" Margin="4,2" DataContext="{Binding ScanViewModel, ElementName=MetaScannerViewRoot, Mode=OneTime}">
+                    <TextBox x:Name="ScanTextBox" VerticalContentAlignment="Center" Padding="2,0"
+                             Text="{Binding ScanText, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Search the display names, logical names, schema names and descriptions of all tables and columns, and all choice values. Press Enter to scan.">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Return" Command="{Binding ScanCommand}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
+                    <TextBlock IsHitTestVisible="False" Text="Scan all tables, columns and choices..." Foreground="Gray" Margin="5,0,0,0"
+                               VerticalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Text, ElementName=ScanTextBox}" Value="">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+                <Button x:Name="ScanButton" ToolTip="Scan all metadata (Enter)">
+                    <WrapPanel>
+                        <Viewbox Style="{StaticResource LucideIconViewboxStyle}">
+                            <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideScanSearch}" />
+                        </Viewbox>
+                        <Label Content="Scan" />
+                    </WrapPanel>
+                </Button>
+            </ToolBar>
+        </ToolBarTray>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="22*" MinWidth="180" />
+                <ColumnDefinition Width="3" />
+                <ColumnDefinition Width="78*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Tables -->
+            <Grid x:Name="EntityListGrid" Background="Gray"
+                  DataContext="{Binding EntityListViewModel, ElementName=MetaScannerViewRoot, Mode=OneTime}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="26" />
+                    <RowDefinition Height="26" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <f81partscontrols:FilterInputControl x:Name="EntityFilterInput" Margin="0,0,0,2" Placeholder="Filter tables..."
+                                                     FilterChanged="EntityFilterInput_FilterChanged"
+                                                     ToolTip="Filter on display name, logical name, schema name or type code" />
+                <Grid Grid.Row="1" Margin="0,0,0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox VerticalContentAlignment="Center"
+                              ItemsSource="{x:Static localviewmodels:EntityListViewModel.Categories}"
+                              SelectedItem="{Binding Category}" />
+                    <ComboBox Grid.Column="1" Width="110" Margin="2,0,0,0" VerticalContentAlignment="Center" ToolTip="Sort tables by"
+                              ItemsSource="{x:Static localviewmodels:EntityListViewModel.SortOptions}"
+                              SelectedItem="{Binding SortBy}" />
+                </Grid>
+                <ListBox x:Name="EntityListBox" Grid.Row="2" BorderThickness="0"
+                         HorizontalContentAlignment="Stretch"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         VirtualizingPanel.IsVirtualizing="True"
+                         VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                         VirtualizingPanel.VirtualizationMode="Recycling"
+                         ItemTemplate="{StaticResource MetaEntityDataTemplate}"
+                         ItemsSource="{Binding EntitiesViewSource}"
+                         SelectedItem="{Binding SelectedEntity}">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}" />
+                            <Setter Property="ContextMenu" Value="{StaticResource MetaEntityContextMenu}" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.GroupStyle>
+                        <GroupStyle>
+                            <GroupStyle.HeaderTemplate>
+                                <DataTemplate>
+                                    <TextBlock FontWeight="Bold" Foreground="DimGray" Margin="4,6,0,2">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="Tables" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Name}" Value="True">
+                                                        <Setter Property="Text" Value="Favorites" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </GroupStyle.HeaderTemplate>
+                        </GroupStyle>
+                    </ListBox.GroupStyle>
+                    <d:ListBox.ItemsSource>
+                        <localmocks:MetaEntityItemsSource />
+                    </d:ListBox.ItemsSource>
+                </ListBox>
+                <TextBlock Grid.Row="3" Text="{Binding CountText}" Foreground="White" Margin="6,3" />
+            </Grid>
+
+            <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" />
+
+            <!-- Table details -->
+            <Grid Grid.Column="2" DataContext="{Binding EntityDetailViewModel, ElementName=MetaScannerViewRoot, Mode=OneTime}">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ScanViewModel.IsActive, ElementName=MetaScannerViewRoot}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <TextBlock>
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource EmptyHintTextBlockStyle}">
+                            <Setter Property="Text" Value="Select a table on the left to explore its columns, relationships, keys, privileges and properties. Or type anything in the Scan box to search every table, column and choice value at once." />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                                    <Setter Property="Text" Value="Loading table metadata..." />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding HasDetail}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <DockPanel Visibility="{Binding HasDetail, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <!-- Header card -->
+                    <Border DockPanel.Dock="Top" Background="{StaticResource HeaderBackgroundBrush}" BorderBrush="{StaticResource DividerBrush}"
+                            BorderThickness="0,0,0,1" Padding="10,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Width="22" Height="22" Source="{Binding Detail.Entity, Converter={StaticResource IIconifiableToImageConverter}}" Stretch="None" />
+                                    <TextBlock Text="{Binding Detail.Entity.DisplayName}" FontSize="18" FontWeight="SemiBold" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                    <ItemsControl ItemsSource="{Binding Badges}" Margin="8,0,0,0" VerticalAlignment="Center" Focusable="False">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="localmodels:MetaBadge">
+                                                <Border x:Name="BadgeBorder" Background="{StaticResource AccentLightBrush}" CornerRadius="9" Padding="7,1" Margin="4,0,0,0">
+                                                    <TextBlock x:Name="BadgeTextBlock" Text="{Binding Text}" FontSize="11" Foreground="{StaticResource AccentDarkBrush}" />
+                                                </Border>
+                                                <!-- Pastel pairs: green = custom/system, orange/yellow = managed/unmanaged, purple = audit -->
+                                                <DataTemplate.Triggers>
+                                                    <DataTrigger Binding="{Binding Kind}" Value="{x:Static localmodels:MetaBadgeKind.Custom}">
+                                                        <Setter TargetName="BadgeBorder" Property="Background" Value="#DFF2DC" />
+                                                        <Setter TargetName="BadgeTextBlock" Property="Foreground" Value="#2E6B2E" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Kind}" Value="{x:Static localmodels:MetaBadgeKind.System}">
+                                                        <Setter TargetName="BadgeBorder" Property="Background" Value="#AFD8AA" />
+                                                        <Setter TargetName="BadgeTextBlock" Property="Foreground" Value="#1F4A1F" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Kind}" Value="{x:Static localmodels:MetaBadgeKind.Managed}">
+                                                        <Setter TargetName="BadgeBorder" Property="Background" Value="#FCDDBE" />
+                                                        <Setter TargetName="BadgeTextBlock" Property="Foreground" Value="#8A4A12" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Kind}" Value="{x:Static localmodels:MetaBadgeKind.Unmanaged}">
+                                                        <Setter TargetName="BadgeBorder" Property="Background" Value="#FDF3BF" />
+                                                        <Setter TargetName="BadgeTextBlock" Property="Foreground" Value="#6B5800" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Kind}" Value="{x:Static localmodels:MetaBadgeKind.AuditEnabled}">
+                                                        <Setter TargetName="BadgeBorder" Property="Background" Value="#DED0F2" />
+                                                        <Setter TargetName="BadgeTextBlock" Property="Foreground" Value="#4A2E78" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Kind}" Value="{x:Static localmodels:MetaBadgeKind.AuditDisabled}">
+                                                        <Setter TargetName="BadgeBorder" Property="Background" Value="#F3EEFA" />
+                                                        <Setter TargetName="BadgeTextBlock" Property="Foreground" Value="#7D6E96" />
+                                                    </DataTrigger>
+                                                </DataTemplate.Triggers>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                                <TextBlock Text="{Binding Detail.Entity.Description}" Foreground="DimGray" TextWrapping="Wrap" Margin="0,4,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Detail.Entity.Description}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <ItemsControl ItemsSource="{Binding Facts}" Focusable="False">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="localmodels:MetaProperty">
+                                            <StackPanel Margin="0,6,20,0">
+                                                <TextBlock Text="{Binding Name}" Style="{StaticResource CaptionTextBlockStyle}" />
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBox Text="{Binding Value, Mode=OneWay}" Style="{StaticResource ReadOnlyTextBoxStyle}" TextWrapping="NoWrap" />
+                                                    <Button Width="16" Height="16" Margin="4,0,0,0" ToolTip="Copy" Focusable="False"
+                                                            Background="Transparent" BorderThickness="0"
+                                                            Visibility="{Binding IsCopyable, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                            Command="{Binding DataContext.CopyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding Value}">
+                                                        <Viewbox Width="11" Height="11">
+                                                            <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideCopy}" Stroke="Gray" />
+                                                        </Viewbox>
+                                                    </Button>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Top">
+                                <Button x:Name="BackToScanButton" HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="6,2"
+                                        Command="{Binding BackToScanCommand}"
+                                        Visibility="{Binding ScanViewModel.HasResults, ElementName=MetaScannerViewRoot, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                                            <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideArrowLeft}" />
+                                        </Viewbox>
+                                        <TextBlock Text="Back to scan results" Margin="4,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="6,2"
+                                        Command="{Binding OpenInMakerPortalCommand}" ToolTip="Open this table in the Power Apps maker portal">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                                            <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideExternalLink}" />
+                                        </Viewbox>
+                                        <TextBlock Text="Open in maker portal" Margin="4,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button HorizontalContentAlignment="Left" Padding="6,2"
+                                        Command="{Binding OpenRecordsCommand}" ToolTip="Open the records of this table in the browser">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                                            <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideTable}" />
+                                        </Viewbox>
+                                        <TextBlock Text="Open records" Margin="4,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <TabControl SelectedIndex="{Binding SelectedTabIndex}" BorderThickness="0,1,0,0" Padding="0">
+                        <!-- Columns -->
+                        <TabItem>
+                            <TabItem.Header>
+                                <TextBlock Text="{Binding Detail.Attributes.Count, StringFormat=Columns ({0})}" />
+                            </TabItem.Header>
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Top" Style="{StaticResource FilterBarStyle}">
+                                    <f81partscontrols:FilterInputControl x:Name="AttributeFilterInput" Width="240"
+                                                                         FilterChanged="AttributeFilterInput_FilterChanged"
+                                                                         ToolTip="Filter on display name, logical name, schema name or details" />
+                                    <ComboBox Style="{StaticResource FilterComboBoxStyle}" ToolTip="Column type"
+                                              ItemsSource="{Binding AttributeTypeNames}"
+                                              SelectedItem="{Binding SelectedAttributeTypeName}" />
+                                    <CheckBox Content="Custom only" Style="{StaticResource FilterCheckBoxStyle}"
+                                              IsChecked="{Binding CustomAttributesOnly}" />
+                                    <CheckBox Content="Show helper columns" Style="{StaticResource FilterCheckBoxStyle}"
+                                              ToolTip="Name and yomi columns that only mirror a lookup, choice or owner column"
+                                              IsChecked="{Binding ShowHelperColumns}" />
+                                    <Button Style="{StaticResource IconButtonStyle}" Margin="10,0,0,0" ToolTip="Export the visible columns to CSV"
+                                            Command="{Binding ExportAttributesCommand}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                                                <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideFileSpreadsheet}" />
+                                            </Viewbox>
+                                            <TextBlock Text="Export" Margin="4,0,0,0" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                    <TextBlock Text="{Binding AttributeCountText}" Style="{StaticResource CountTextBlockStyle}" />
+                                </StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" MinWidth="300" />
+                                        <ColumnDefinition Width="3" />
+                                        <ColumnDefinition Width="360" MinWidth="200" />
+                                    </Grid.ColumnDefinitions>
+                                    <DataGrid x:Name="AttributesDataGrid" Style="{StaticResource MetaDataGridStyle}"
+                                              ItemsSource="{Binding AttributesViewSource}"
+                                              SelectedItem="{Binding SelectedAttribute}">
+                                        <DataGrid.RowStyle>
+                                            <Style TargetType="DataGridRow">
+                                                <Setter Property="ToolTip" Value="{Binding Description}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsPrimaryId}" Value="True">
+                                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsPrimaryName}" Value="True">
+                                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Description}" Value="{x:Null}">
+                                                        <Setter Property="ToolTip" Value="{x:Null}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </DataGrid.RowStyle>
+                                        <DataGrid.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="Copy Logical Name" Command="{Binding CopyCommand}"
+                                                          CommandParameter="{Binding PlacementTarget.SelectedItem.LogicalName, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                                    <MenuItem.Icon>
+                                                        <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                                                            <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideCopy}" />
+                                                        </Viewbox>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem Header="Copy Schema Name" Command="{Binding CopyCommand}"
+                                                          CommandParameter="{Binding PlacementTarget.SelectedItem.SchemaName, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                                <MenuItem Header="Copy Display Name" Command="{Binding CopyCommand}"
+                                                          CommandParameter="{Binding PlacementTarget.SelectedItem.DisplayName, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                            </ContextMenu>
+                                        </DataGrid.ContextMenu>
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Display Name" Binding="{Binding DisplayName}" Width="190" />
+                                            <DataGridTextColumn Header="Logical Name" Binding="{Binding LogicalName}" Width="190" />
+                                            <DataGridTextColumn Header="Type" Binding="{Binding TypeName}" Width="120" />
+                                            <DataGridTextColumn Header="Details" Binding="{Binding Details}" Width="*" MinWidth="120" />
+                                            <DataGridTextColumn Header="Required" Binding="{Binding RequiredLevel}" Width="110" />
+                                            <DataGridCheckBoxColumn Header="Custom" Binding="{Binding IsCustom, Mode=OneWay}" Width="60"
+                                                                    ElementStyle="{StaticResource CenteredCheckBoxStyle}" />
+                                            <DataGridCheckBoxColumn Header="Audit" Binding="{Binding IsAuditEnabled, Mode=OneWay}" Width="50"
+                                                                    ElementStyle="{StaticResource CenteredCheckBoxStyle}" />
+                                            <DataGridCheckBoxColumn Header="Searchable" Binding="{Binding IsSearchable, Mode=OneWay}" Width="75"
+                                                                    ElementStyle="{StaticResource CenteredCheckBoxStyle}" />
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                    <TextBlock Text="No columns match the filters." Margin="8,32,8,8">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource EmptyHintTextBlockStyle}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HasItems, ElementName=AttributesDataGrid}" Value="True">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+
+                                    <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" />
+
+                                    <!-- Column details -->
+                                    <Border Grid.Column="2" Background="{StaticResource HeaderBackgroundBrush}">
+                                        <Grid>
+                                            <TextBlock Text="Select a column to see its choices and all of its properties.">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource EmptyHintTextBlockStyle}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding SelectedAttribute}" Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <Grid DataContext="{Binding SelectedAttribute}" Margin="8">
+                                                <Grid.Style>
+                                                    <Style TargetType="Grid">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Grid.Style>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="*" MinHeight="80" />
+                                                </Grid.RowDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding DisplayName}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                    <TextBox Text="{Binding LogicalName, Mode=OneWay}" Style="{StaticResource ReadOnlyTextBoxStyle}" />
+                                                    <TextBlock Foreground="DimGray" TextWrapping="Wrap" Margin="0,2,0,0">
+                                                        <TextBlock.Text>
+                                                            <MultiBinding StringFormat="{}{0}  ·  {1}">
+                                                                <Binding Path="TypeName" />
+                                                                <Binding Path="RequiredLevel" />
+                                                            </MultiBinding>
+                                                        </TextBlock.Text>
+                                                    </TextBlock>
+                                                    <TextBlock Text="{Binding Details}" Foreground="DimGray" TextWrapping="Wrap" />
+                                                </StackPanel>
+                                                <TextBlock Grid.Row="1" Text="{Binding Description}" TextWrapping="Wrap" Margin="0,6,0,0" FontStyle="Italic" />
+                                                <StackPanel Grid.Row="2" Margin="0,8,0,0"
+                                                            Visibility="{Binding HasOptions, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <TextBlock Text="Choices" FontWeight="Bold" Margin="0,0,0,2" />
+                                                    <Border BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" Background="White">
+                                                        <ScrollViewer MaxHeight="220" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                                            <ItemsControl ItemsSource="{Binding Options}" AlternationCount="2">
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate DataType="localmodels:MetaOption">
+                                                                        <Border x:Name="OptionBorder" Padding="4,2" ToolTip="{Binding Description}">
+                                                                            <Grid>
+                                                                                <Grid.ColumnDefinitions>
+                                                                                    <ColumnDefinition Width="14" />
+                                                                                    <ColumnDefinition Width="90" />
+                                                                                    <ColumnDefinition Width="*" />
+                                                                                </Grid.ColumnDefinitions>
+                                                                                <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="{Binding Color}" />
+                                                                                <TextBox Grid.Column="1" Text="{Binding Value, Mode=OneWay}" Style="{StaticResource ReadOnlyTextBoxStyle}"
+                                                                                         FontFamily="Consolas" Foreground="DimGray" />
+                                                                                <TextBox Grid.Column="2" Text="{Binding Label, Mode=OneWay}" Style="{StaticResource ReadOnlyTextBoxStyle}" />
+                                                                            </Grid>
+                                                                        </Border>
+                                                                        <DataTemplate.Triggers>
+                                                                            <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                                                                                <Setter TargetName="OptionBorder" Property="Background" Value="#F7F7F7" />
+                                                                            </Trigger>
+                                                                        </DataTemplate.Triggers>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </ScrollViewer>
+                                                    </Border>
+                                                </StackPanel>
+                                                <TextBlock Grid.Row="3" Text="All properties" FontWeight="Bold" Margin="0,8,0,2" />
+                                                <DataGrid Grid.Row="4" Style="{StaticResource MetaDataGridStyle}" BorderThickness="1" BorderBrush="{StaticResource DividerBrush}"
+                                                          ItemsSource="{Binding Properties}">
+                                                    <DataGrid.Columns>
+                                                        <DataGridTextColumn Header="Property" Binding="{Binding Name}" Width="150" />
+                                                        <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="*"
+                                                                            ElementStyle="{StaticResource WrappingTextBlockStyle}" />
+                                                    </DataGrid.Columns>
+                                                </DataGrid>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </DockPanel>
+                        </TabItem>
+
+                        <!-- Relationships -->
+                        <TabItem>
+                            <TabItem.Header>
+                                <TextBlock Text="{Binding Detail.Relationships.Count, StringFormat=Relationships ({0})}" />
+                            </TabItem.Header>
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Top" Style="{StaticResource FilterBarStyle}">
+                                    <f81partscontrols:FilterInputControl Width="240"
+                                                                         FilterChanged="RelationshipFilterInput_FilterChanged"
+                                                                         ToolTip="Filter on schema name, related table, lookup column or intersect table" />
+                                    <ComboBox Style="{StaticResource FilterComboBoxStyle}" ToolTip="Relationship type"
+                                              ItemsSource="{x:Static localviewmodels:EntityDetailViewModel.RelationshipKinds}"
+                                              SelectedItem="{Binding SelectedRelationshipKind}" />
+                                    <TextBlock Text="{Binding RelationshipCountText}" Style="{StaticResource CountTextBlockStyle}" />
+                                    <TextBlock Text="Double-click a relationship to open the related table" Style="{StaticResource CountTextBlockStyle}" FontStyle="Italic" />
+                                </StackPanel>
+                                <DataGrid x:Name="RelationshipsDataGrid" Style="{StaticResource MetaDataGridStyle}"
+                                          ItemsSource="{Binding RelationshipsViewSource}"
+                                          SelectedItem="{Binding SelectedRelationship}">
+                                    <DataGrid.RowStyle>
+                                        <Style TargetType="DataGridRow">
+                                            <EventSetter Event="MouseDoubleClick" Handler="RelationshipRow_MouseDoubleClick" />
+                                        </Style>
+                                    </DataGrid.RowStyle>
+                                    <DataGrid.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="Open Related Table" Command="{Binding GoToEntityCommand}"
+                                                      CommandParameter="{Binding PlacementTarget.SelectedItem, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                                <MenuItem.Icon>
+                                                    <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                                                        <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideArrowRight}" />
+                                                    </Viewbox>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <Separator />
+                                            <MenuItem Header="Copy Schema Name" Command="{Binding CopyCommand}"
+                                                      CommandParameter="{Binding PlacementTarget.SelectedItem.SchemaName, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                                <MenuItem.Icon>
+                                                    <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                                                        <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideCopy}" />
+                                                    </Viewbox>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Copy Related Table" Command="{Binding CopyCommand}"
+                                                      CommandParameter="{Binding PlacementTarget.SelectedItem.RelatedEntity, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                        </ContextMenu>
+                                    </DataGrid.ContextMenu>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Type" Binding="{Binding Kind}" Width="100" />
+                                        <DataGridTextColumn Header="Schema Name" Binding="{Binding SchemaName}" Width="260" />
+                                        <DataGridTextColumn Header="Related Table" Binding="{Binding RelatedEntity}" Width="170" />
+                                        <DataGridTextColumn Header="Lookup Column" Binding="{Binding LookupColumn}" Width="230" />
+                                        <DataGridTextColumn Header="Intersect Table" Binding="{Binding IntersectEntity}" Width="170" />
+                                        <DataGridTextColumn Header="Behavior" Binding="{Binding Behavior}" Width="*" MinWidth="120" />
+                                        <DataGridCheckBoxColumn Header="Custom" Binding="{Binding IsCustom, Mode=OneWay}" Width="60"
+                                                                ElementStyle="{StaticResource CenteredCheckBoxStyle}" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </DockPanel>
+                        </TabItem>
+
+                        <!-- Keys -->
+                        <TabItem>
+                            <TabItem.Header>
+                                <TextBlock Text="{Binding Detail.Keys.Count, StringFormat=Keys ({0})}" />
+                            </TabItem.Header>
+                            <Grid>
+                                <DataGrid x:Name="KeysDataGrid" Style="{StaticResource MetaDataGridStyle}" ItemsSource="{Binding Detail.Keys}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Display Name" Binding="{Binding DisplayName}" Width="200" />
+                                        <DataGridTextColumn Header="Logical Name" Binding="{Binding LogicalName}" Width="220" />
+                                        <DataGridTextColumn Header="Columns" Binding="{Binding Columns}" Width="*" />
+                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <TextBlock Text="This table has no alternate keys." Margin="8,32,8,8">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource EmptyHintTextBlockStyle}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasItems, ElementName=KeysDataGrid}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+                        </TabItem>
+
+                        <!-- Privileges -->
+                        <TabItem>
+                            <TabItem.Header>
+                                <TextBlock Text="{Binding Detail.Privileges.Count, StringFormat=Privileges ({0})}" />
+                            </TabItem.Header>
+                            <DataGrid Style="{StaticResource MetaDataGridStyle}" ItemsSource="{Binding Detail.Privileges}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="260" />
+                                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="120" />
+                                    <DataGridCheckBoxColumn Header="User" Binding="{Binding CanBeBasic, Mode=OneWay}" Width="60"
+                                                            ElementStyle="{StaticResource CenteredCheckBoxStyle}" />
+                                    <DataGridCheckBoxColumn Header="Business Unit" Binding="{Binding CanBeLocal, Mode=OneWay}" Width="90"
+                                                            ElementStyle="{StaticResource CenteredCheckBoxStyle}" />
+                                    <DataGridCheckBoxColumn Header="Parent: Child BU" Binding="{Binding CanBeDeep, Mode=OneWay}" Width="110"
+                                                            ElementStyle="{StaticResource CenteredCheckBoxStyle}" />
+                                    <DataGridCheckBoxColumn Header="Organization" Binding="{Binding CanBeGlobal, Mode=OneWay}" Width="90"
+                                                            ElementStyle="{StaticResource CenteredCheckBoxStyle}" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+
+                        <!-- Properties -->
+                        <TabItem Header="Properties">
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Top" Style="{StaticResource FilterBarStyle}">
+                                    <f81partscontrols:FilterInputControl Width="240"
+                                                                         FilterChanged="PropertyFilterInput_FilterChanged"
+                                                                         ToolTip="Filter on property name or value" />
+                                </StackPanel>
+                                <DataGrid Style="{StaticResource MetaDataGridStyle}" ItemsSource="{Binding PropertiesViewSource}">
+                                    <DataGrid.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="Copy Value" Command="{Binding CopyCommand}"
+                                                      CommandParameter="{Binding PlacementTarget.SelectedItem.Value, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                                <MenuItem.Icon>
+                                                    <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                                                        <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideCopy}" />
+                                                    </Viewbox>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </DataGrid.ContextMenu>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Property" Binding="{Binding Name}" Width="280" />
+                                        <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="*"
+                                                            ElementStyle="{StaticResource WrappingTextBlockStyle}" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </DockPanel>
+                        </TabItem>
+                    </TabControl>
+                </DockPanel>
+            </Grid>
+
+            <!-- Scan results -->
+            <DockPanel Grid.Column="2" DataContext="{Binding ScanViewModel, ElementName=MetaScannerViewRoot, Mode=OneTime}"
+                       Visibility="{Binding IsActive, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Border DockPanel.Dock="Top" Background="{StaticResource HeaderBackgroundBrush}" BorderBrush="{StaticResource DividerBrush}"
+                        BorderThickness="0,0,0,1" Padding="10,8">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Style="{StaticResource IconButtonStyle}" ToolTip="Close the scan results"
+                                Command="{Binding CloseCommand}">
+                            <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                                <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideX}" />
+                            </Viewbox>
+                        </Button>
+                        <Button DockPanel.Dock="Right" Style="{StaticResource IconButtonStyle}" ToolTip="Export the visible results to CSV"
+                                Command="{Binding ExportCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                                    <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideFileSpreadsheet}" />
+                                </Viewbox>
+                                <TextBlock Text="Export" Margin="4,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <ComboBox DockPanel.Dock="Right" Style="{StaticResource FilterComboBoxStyle}" ToolTip="Result type"
+                                  ItemsSource="{x:Static localviewmodels:ScanViewModel.Kinds}"
+                                  SelectedItem="{Binding SelectedKind}" />
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Viewbox Style="{StaticResource LucideIconViewboxStyle}" Margin="0">
+                                <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideScanSearch}" Stroke="{StaticResource AccentBrush}" />
+                            </Viewbox>
+                            <TextBlock FontSize="16" FontWeight="SemiBold" Margin="6,0,0,0" VerticalAlignment="Center"
+                                       Text="{Binding ScannedText, StringFormat=Scan results for “{0}”}" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+                <StatusBar DockPanel.Dock="Bottom">
+                    <StatusBarItem>
+                        <TextBlock Text="Double-click a result, or select it and press Enter, to open it" Foreground="DimGray" />
+                    </StatusBarItem>
+                    <StatusBarItem HorizontalAlignment="Right">
+                        <TextBlock Text="{Binding StatusText}" />
+                    </StatusBarItem>
+                </StatusBar>
+                <Grid>
+                    <DataGrid x:Name="ScanResultsDataGrid" Style="{StaticResource MetaDataGridStyle}"
+                              ItemsSource="{Binding ResultsViewSource}"
+                              PreviewKeyDown="ScanResultsDataGrid_PreviewKeyDown">
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <EventSetter Event="MouseDoubleClick" Handler="ScanResultRow_MouseDoubleClick" />
+                            </Style>
+                        </DataGrid.RowStyle>
+                        <DataGrid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Open" Command="{Binding OpenResultCommand}"
+                                          CommandParameter="{Binding PlacementTarget.SelectedItem, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                    <MenuItem.Icon>
+                                        <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                                            <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideArrowRight}" />
+                                        </Viewbox>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator />
+                                <MenuItem Header="Copy Logical Name" Command="{Binding CopyCommand}"
+                                          CommandParameter="{Binding PlacementTarget.SelectedItem.LogicalName, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                    <MenuItem.Icon>
+                                        <Viewbox Style="{StaticResource LucideMenuIconViewboxStyle}">
+                                            <Path Style="{StaticResource LucideIconStyle}" Data="{StaticResource LucideCopy}" />
+                                        </Viewbox>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Copy Table Logical Name" Command="{Binding CopyCommand}"
+                                          CommandParameter="{Binding PlacementTarget.SelectedItem.Entity.LogicalName, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                <MenuItem Header="Copy Matched Text" Command="{Binding CopyCommand}"
+                                          CommandParameter="{Binding PlacementTarget.SelectedItem.MatchedText, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Table" Width="200" SortMemberPath="Entity.DisplayName">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate DataType="localmodels:ScanResult">
+                                        <StackPanel Orientation="Horizontal" ToolTip="{Binding Entity.LogicalName}">
+                                            <Image Width="20" Height="20" Source="{Binding Converter={StaticResource IIconifiableToImageConverter}}" Stretch="None" />
+                                            <TextBlock Text="{Binding Entity.DisplayName}" Margin="4,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Kind" Binding="{Binding Kind}" Width="95" />
+                            <DataGridTextColumn Header="Display Name" Binding="{Binding DisplayName}" Width="190" />
+                            <DataGridTextColumn Header="Logical Name" Binding="{Binding LogicalName}" Width="190" />
+                            <DataGridTextColumn Header="Type" Binding="{Binding TypeName}" Width="110" />
+                            <DataGridTextColumn Header="Matched On" Binding="{Binding MatchedOn}" Width="105" />
+                            <DataGridTextColumn Header="Matched Text" Binding="{Binding MatchedText}" Width="*" MinWidth="150" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Text="Nothing found. Try a shorter or different search." Margin="8,32,8,8">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource EmptyHintTextBlockStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasItems, ElementName=ScanResultsDataGrid}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+</UserControl>

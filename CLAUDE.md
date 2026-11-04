@@ -129,7 +129,9 @@ To debug, point XrmToolBox at that output or copy the DLL into the XrmToolBox `P
 - `build-auditgoggles.yml`: on push/PR to `main` (and manual). Version = `major.minor.yyDDD.runNumber`,
   stamps AssemblyInfo + nuspec, builds Release, packs the nupkg, uploads artifacts. Manual run with
   `create_release = true` also creates a GitHub Release with the nupkg and a zipped DLL.
-- `publish-auditgoggles.yml`: manual, takes a release tag and pushes the nupkg to nuget.org (environment `Nuget Publish`, secret `NUGET_API_KEY`).
+- `publish-auditgoggles.yml`: manual, takes a release tag and pushes the nupkg to nuget.org (environment `Nuget Publish`). Uses NuGet Trusted Publishing: `NuGet/login@v1`
+  exchanges the GitHub OIDC token for a 1-hour API key, so no long-lived key is stored. Needs the secret
+  `NUGET_USER` (nuget.org profile name) and a Trusted Publishing policy on nuget.org per workflow file.
 - `build-metascanner.yml` / `publish-metascanner.yml`: the same for Meta Scanner, except the build only runs
   automatically when `MetaScanner/**` or `Shared/**` changes, and its releases are tagged `metascanner-<version>`
   (run numbers are per workflow, so plain version tags could collide with Audit Goggles releases).

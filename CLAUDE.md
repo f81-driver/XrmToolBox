@@ -46,8 +46,6 @@ Shared/                   Shared projects (.shproj/.projitems), compiled INTO th
   Xrm/       Early-bound entities (Audit, WebResource, GlobalOptionSets), ColumnNames partials,
              metadata extensions, EntityIconCache, embedded entity icons
   XrmParts/  IIconifiable + converter
-EarlyBound/               Early-bound generation (separate EarlyBound.sln)
-  Generator/XrmContext/          Delegate XrmContext binaries + Run.ps1 / Run.fsx
 docs/images/              Screenshots used by the README / wiki, and MetaScanner.png (nuspec iconUrl)
 .github/workflows/        build-/publish-auditgoggles.yml, build-/publish-metascanner.yml
 ```
@@ -82,7 +80,7 @@ To debug, point XrmToolBox at that output or copy the DLL into the XrmToolBox `P
 
 ## Early-bound classes
 
-- Always generate with **Delegate XrmContext** (`EarlyBound/Generator/XrmContext/XrmContext.exe`, run via `Run.ps1`).
+- Always generate with **Delegate XrmContext** (`Generator/XrmContext/XrmContext.exe` in the separate [XrmToolBox.Xrm](https://github.com/f81-driver/XrmToolBox.Xrm) repo, cloned next to this one as `../XrmToolBox.Xrm`; run via `Run.ps1`).
   Do not use CrmSvcUtil, `pac modelbuilder` or the Early Bound Generator plugin.
 - Connection and entity settings live in `XrmContext.exe.config`, which is **gitignored** because it holds
   credentials. Never commit it or print its contents.

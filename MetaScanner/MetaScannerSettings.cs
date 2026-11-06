@@ -21,6 +21,9 @@ namespace Formula81.XrmToolBox.Tools.MetaScanner
 
         public string EntitySortBy { get; set; }
 
+        /// <summary>The table selected last, to select it again when the tool opens</summary>
+        public string SelectedEntity { get; set; }
+
         public MetaScannerSettings()
         {
             _favoriteEntitySet = new HashSet<string>();

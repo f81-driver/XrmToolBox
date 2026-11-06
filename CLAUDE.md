@@ -80,10 +80,10 @@ To debug, point XrmToolBox at that output or copy the DLL into the XrmToolBox `P
 
 ## Early-bound classes
 
-- Always generate with **Delegate XrmContext** (`Generator/XrmContext/XrmContext.exe` in the separate [XrmToolBox.Xrm](https://github.com/f81-driver/XrmToolBox.Xrm) repo, cloned next to this one as `../XrmToolBox.Xrm`; run via `Run.ps1`).
+- Always generate with **Delegate XrmContext** (`Generator/XrmContext/XrmContext.exe` in the separate [XrmToolBox.Xrm](https://github.com/f81-driver/XrmToolBox.Xrm) repo, cloned next to this one as `../XrmToolBox.Xrm`; run via `Generate.ps1`, which asks for the environment URL and signs in interactively).
   Do not use CrmSvcUtil, `pac modelbuilder` or the Early Bound Generator plugin.
-- Connection and entity settings live in `XrmContext.exe.config`, which is **gitignored** because it holds
-  credentials. Never commit it or print its contents.
+- Entity, output and namespace settings live in the committed `XrmContext.exe.config`. It must never hold a URL,
+  credentials or secrets: authentication is interactive OAuth only.
 - Generated files (`Shared/Xrm/Audit.cs`, `WebResource.cs`, `GlobalOptionSets.cs`, `XrmExtensions.cs`) are
   auto-generated: do not edit them by hand. Put additions in partial classes, as in
   `Shared/Xrm/ColumnNames/*.cs`, which expose column names via `GetColumnName<T>(x => x.Prop)`.

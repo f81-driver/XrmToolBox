@@ -11,7 +11,7 @@
 using Microsoft.Xrm.Sdk.Client;
 using System.Runtime.Serialization;
 
-//[assembly: ProxyTypesAssembly()]
+[assembly: ProxyTypesAssembly()]
 
 
 namespace Formula81.XrmToolBox.Shared.Xrm {
@@ -35,5 +35,21 @@ namespace Formula81.XrmToolBox.Shared.Xrm {
         [EnumMember()]
         [OptionSetMetadata("Deleted Unpublished", Index=3, Lcid=1033)]
         DeletedUnpublished = 3,
+    }
+    
+    [DataContract()]
+    public enum nrq_vehicle {
+        
+        [EnumMember()]
+        [OptionSetMetadata("Private Car", Index=0, Lcid=1033, Description="", Color="#0000ff")]
+        PrivateCar = 170590000,
+        
+        [EnumMember()]
+        [OptionSetMetadata("Company Car", Index=1, Lcid=1033, Description="", Color="#0000ff")]
+        CompanyCar = 170590001,
+        
+        [EnumMember()]
+        [OptionSetMetadata("By Foot / Bicycle", Index=2, Lcid=1033, Description="", Color="#0000ff")]
+        ByFootBicycle = 170590002,
     }
 }

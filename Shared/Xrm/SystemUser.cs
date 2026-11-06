@@ -2021,448 +2021,6 @@ namespace Formula81.XrmToolBox.Shared.Xrm {
             }
         }
         
-        /// <summary>
-        /// <para>Type of user - Application user or Bot application user</para>
-        /// <para>Display Name: User type</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_agentType")]
-        [DisplayName("User type")]
-        public SystemUser_msdyn_AgentType? msdyn_AgentType {
-            get {
-                return GetOptionSetValue<SystemUser_msdyn_AgentType>("msdyn_agentType");
-            }
-            set {
-                SetOptionSetValue("msdyn_agentType", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Application ID of the bot.</para>
-        /// <para>Display Name: Bot application ID</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_botapplicationid")]
-        [DisplayName("Bot application ID")]
-        [MaxLength(100)]
-        public string msdyn_BotApplicationId {
-            get {
-                return GetAttributeValue<string>("msdyn_botapplicationid");
-            }
-            set {
-                SetAttributeValue("msdyn_botapplicationid", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>BOT User Description</para>
-        /// <para>Display Name: Description</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_botdescription")]
-        [DisplayName("Description")]
-        public string msdyn_BotDescription {
-            get {
-                return GetAttributeValue<string>("msdyn_botdescription");
-            }
-            set {
-                SetAttributeValue("msdyn_botdescription", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Bot User Endpoint</para>
-        /// <para>Display Name: Endpoint</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_botendpoint")]
-        [DisplayName("Endpoint")]
-        [MaxLength(100)]
-        public string msdyn_BotEndpoint {
-            get {
-                return GetAttributeValue<string>("msdyn_botendpoint");
-            }
-            set {
-                SetAttributeValue("msdyn_botendpoint", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Indicates the type of bot</para>
-        /// <para>Display Name: Bot Provider</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_botprovider")]
-        [DisplayName("Bot Provider")]
-        public SystemUser_msdyn_BotProvider? msdyn_BotProvider {
-            get {
-                return GetOptionSetValue<SystemUser_msdyn_BotProvider>("msdyn_botprovider");
-            }
-            set {
-                SetOptionSetValue("msdyn_botprovider", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Bot User Secret Keys</para>
-        /// <para>Display Name: Secret Keys</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_botsecretkeys")]
-        [DisplayName("Secret Keys")]
-        [MaxLength(100)]
-        public string msdyn_BotSecretKeys {
-            get {
-                return GetAttributeValue<string>("msdyn_botsecretkeys");
-            }
-            set {
-                SetAttributeValue("msdyn_botsecretkeys", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Classifies the bot user type (e.g. Microsoft Copilot Studio).</para>
-        /// <para>Display Name: Bot Type</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_bottype")]
-        [DisplayName("Bot Type")]
-        public SystemUser_msdyn_BotType? msdyn_BotType {
-            get {
-                return GetOptionSetValue<SystemUser_msdyn_BotType>("msdyn_bottype");
-            }
-            set {
-                SetOptionSetValue("msdyn_bottype", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Capacity associated with the User.</para>
-        /// <para>Display Name: Capacity</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_capacity")]
-        [DisplayName("Capacity")]
-        [Range(0, 2147483647)]
-        public int? msdyn_Capacity {
-            get {
-                return GetAttributeValue<int?>("msdyn_capacity");
-            }
-            set {
-                SetAttributeValue("msdyn_capacity", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Unique identifier for Presence associated with User.</para>
-        /// <para>Display Name: Default Presence</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_defaultpresenceiduser")]
-        [DisplayName("Default Presence")]
-        public EntityReference msdyn_DefaultPresenceIdUser {
-            get {
-                return GetAttributeValue<EntityReference>("msdyn_defaultpresenceiduser");
-            }
-            set {
-                SetAttributeValue("msdyn_defaultpresenceiduser", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Indicates whether chat intent is enabled for the user.</para>
-        /// <para>Display Name: Is chat intent enabled</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_ischatintentenabled")]
-        [DisplayName("Is chat intent enabled")]
-        public bool? msdyn_IsChatIntentEnabled {
-            get {
-                return GetAttributeValue<bool?>("msdyn_ischatintentenabled");
-            }
-            set {
-                SetAttributeValue("msdyn_ischatintentenabled", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Indicates whether multichannel intent is enabled for the user.</para>
-        /// <para>Display Name: Is multichannel intent enabled</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_ismultichannelintentenabled")]
-        [DisplayName("Is multichannel intent enabled")]
-        public bool? msdyn_IsMultichannelIntentEnabled {
-            get {
-                return GetAttributeValue<bool?>("msdyn_ismultichannelintentenabled");
-            }
-            set {
-                SetAttributeValue("msdyn_ismultichannelintentenabled", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Indicates whether voice intent is enabled for the user.</para>
-        /// <para>Display Name: Is voice intent enabled</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_isvoiceintentenabled")]
-        [DisplayName("Is voice intent enabled")]
-        public bool? msdyn_IsVoiceIntentEnabled {
-            get {
-                return GetAttributeValue<bool?>("msdyn_isvoiceintentenabled");
-            }
-            set {
-                SetAttributeValue("msdyn_isvoiceintentenabled", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Environment Id of the CDS environment that owns the bot user.</para>
-        /// <para>Display Name: Owning Environment Id</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_owningenvironmentid")]
-        [DisplayName("Owning Environment Id")]
-        [MaxLength(500)]
-        public string msdyn_OwningEnvironmentId {
-            get {
-                return GetAttributeValue<string>("msdyn_owningenvironmentid");
-            }
-            set {
-                SetAttributeValue("msdyn_owningenvironmentid", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Type of user - CRM or BOT user</para>
-        /// <para>Display Name: Type</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_usertype")]
-        [DisplayName("Type")]
-        public SystemUser_msdyn_UserType? msdyn_UserType {
-            get {
-                return GetOptionSetValue<SystemUser_msdyn_UserType>("msdyn_usertype");
-            }
-            set {
-                SetOptionSetValue("msdyn_usertype", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Limit the number of returning conversations for a user in async messaging channel only</para>
-        /// <para>Display Name: Active Conversation Limit</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_activeconversationlimit")]
-        [DisplayName("Active Conversation Limit")]
-        [Range(1, 100)]
-        public int? msdyn_activeconversationlimit {
-            get {
-                return GetAttributeValue<int?>("msdyn_activeconversationlimit");
-            }
-            set {
-                SetAttributeValue("msdyn_activeconversationlimit", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Bot handle</para>
-        /// <para>Display Name: Bot handle</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_bothandle")]
-        [DisplayName("Bot handle")]
-        [MaxLength(100)]
-        public string msdyn_bothandle {
-            get {
-                return GetAttributeValue<string>("msdyn_bothandle");
-            }
-            set {
-                SetAttributeValue("msdyn_bothandle", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Call forward number</para>
-        /// <para>Display Name: Call forward number</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_callforwardingnumber")]
-        [DisplayName("Call forward number")]
-        [MaxLength(50)]
-        public string msdyn_callforwardingnumber {
-            get {
-                return GetAttributeValue<string>("msdyn_callforwardingnumber");
-            }
-            set {
-                SetAttributeValue("msdyn_callforwardingnumber", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Cognitive Services Region</para>
-        /// <para>Display Name: Cognitive Services Region</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_cognitiveservicesregion")]
-        [DisplayName("Cognitive Services Region")]
-        [MaxLength(100)]
-        public string msdyn_cognitiveservicesregion {
-            get {
-                return GetAttributeValue<string>("msdyn_cognitiveservicesregion");
-            }
-            set {
-                SetAttributeValue("msdyn_cognitiveservicesregion", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Cognitive Services Subscription Key</para>
-        /// <para>Display Name: Cognitive Services Subscription Key</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_cognitiveservicessubscriptionkey")]
-        [DisplayName("Cognitive Services Subscription Key")]
-        [MaxLength(100)]
-        public string msdyn_cognitiveservicessubscriptionkey {
-            get {
-                return GetAttributeValue<string>("msdyn_cognitiveservicessubscriptionkey");
-            }
-            set {
-                SetAttributeValue("msdyn_cognitiveservicessubscriptionkey", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Recipient emails for emergency call, seperated by semi-colon</para>
-        /// <para>Display Name: Recipient emails</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_emergencyemailrecipients")]
-        [DisplayName("Recipient emails")]
-        [MaxLength(4000)]
-        public string msdyn_emergencyemailrecipients {
-            get {
-                return GetAttributeValue<string>("msdyn_emergencyemailrecipients");
-            }
-            set {
-                SetAttributeValue("msdyn_emergencyemailrecipients", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Describes whether user is opted out or not</para>
-        /// <para>Display Name: GDPR Optout</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_gdproptout")]
-        [DisplayName("GDPR Optout")]
-        public bool? msdyn_gdproptout {
-            get {
-                return GetAttributeValue<bool?>("msdyn_gdproptout");
-            }
-            set {
-                SetAttributeValue("msdyn_gdproptout", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Field to bind grid wrapper control</para>
-        /// <para>Display Name: Grid Wrapper Control field</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_gridwrappercontrolfield")]
-        [DisplayName("Grid Wrapper Control field")]
-        [MaxLength(4000)]
-        public string msdyn_gridwrappercontrolfield {
-            get {
-                return GetAttributeValue<string>("msdyn_gridwrappercontrolfield");
-            }
-            set {
-                SetAttributeValue("msdyn_gridwrappercontrolfield", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Check if swarm is enabled for the experts.</para>
-        /// <para>Display Name: Expert Enabled Swarm</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_isexpertenabledforswarm")]
-        [DisplayName("Expert Enabled Swarm")]
-        public bool? msdyn_isexpertenabledforswarm {
-            get {
-                return GetAttributeValue<bool?>("msdyn_isexpertenabledforswarm");
-            }
-            set {
-                SetAttributeValue("msdyn_isexpertenabledforswarm", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Display Name: Phone Number</para>
-        /// </summary>
-        [AttributeLogicalName("msdyn_phonenumberid")]
-        [DisplayName("Phone Number")]
-        public EntityReference msdyn_phonenumberid {
-            get {
-                return GetAttributeValue<EntityReference>("msdyn_phonenumberid");
-            }
-            set {
-                SetAttributeValue("msdyn_phonenumberid", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Display Name: Enable Blue App Inspections</para>
-        /// </summary>
-        [AttributeLogicalName("nrq_enableblueappinspections")]
-        [DisplayName("Enable Blue App Inspections")]
-        public bool? nrq_EnableBlueAppInspections {
-            get {
-                return GetAttributeValue<bool?>("nrq_enableblueappinspections");
-            }
-            set {
-                SetAttributeValue("nrq_enableblueappinspections", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>When enabled, the inspectors will see the cloud document tabs in their blue app</para>
-        /// <para>Display Name: Enable Cloud Document Tabs</para>
-        /// </summary>
-        [AttributeLogicalName("nrq_enableclouddocumenttabs")]
-        [DisplayName("Enable Cloud Document Tabs")]
-        public bool? nrq_EnableCloudDocumentTabs {
-            get {
-                return GetAttributeValue<bool?>("nrq_enableclouddocumenttabs");
-            }
-            set {
-                SetAttributeValue("nrq_enableclouddocumenttabs", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Display Name: Enable Resco Inspections</para>
-        /// </summary>
-        [AttributeLogicalName("nrq_enablerescoinspections")]
-        [DisplayName("Enable Resco Inspections")]
-        public bool? nrq_EnableRescoInspections {
-            get {
-                return GetAttributeValue<bool?>("nrq_enablerescoinspections");
-            }
-            set {
-                SetAttributeValue("nrq_enablerescoinspections", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Display Name: Inspections available on Leave Site</para>
-        /// </summary>
-        [AttributeLogicalName("nrq_inspectionsavailableonleavesite")]
-        [DisplayName("Inspections available on Leave Site")]
-        public bool? nrq_InspectionsavailableonLeaveSite {
-            get {
-                return GetAttributeValue<bool?>("nrq_inspectionsavailableonleavesite");
-            }
-            set {
-                SetAttributeValue("nrq_inspectionsavailableonleavesite", value);
-            }
-        }
-        
-        /// <summary>
-        /// <para>Display Name: Vehicle</para>
-        /// </summary>
-        [AttributeLogicalName("nrq_vehicle")]
-        [DisplayName("Vehicle")]
-        public nrq_vehicle? nrq_Vehicle {
-            get {
-                return GetOptionSetValue<nrq_vehicle>("nrq_vehicle");
-            }
-            set {
-                SetOptionSetValue("nrq_vehicle", value);
-            }
-        }
-        
         [RelationshipSchemaName("lk_systemuser_createdonbehalfby", EntityRole.Referenced)]
         public IEnumerable<SystemUser> Referencedlk_systemuser_createdonbehalfby {
             get {
@@ -2628,6 +2186,56 @@ namespace Formula81.XrmToolBox.Shared.Xrm {
             }
         }
         
+        [RelationshipSchemaName("lk_team_createdonbehalfby")]
+        public IEnumerable<Team> lk_team_createdonbehalfby {
+            get {
+                return GetRelatedEntities<Team>("lk_team_createdonbehalfby", null);
+            }
+            set {
+                SetRelatedEntities("lk_team_createdonbehalfby", null, value);
+            }
+        }
+        
+        [RelationshipSchemaName("lk_team_modifiedonbehalfby")]
+        public IEnumerable<Team> lk_team_modifiedonbehalfby {
+            get {
+                return GetRelatedEntities<Team>("lk_team_modifiedonbehalfby", null);
+            }
+            set {
+                SetRelatedEntities("lk_team_modifiedonbehalfby", null, value);
+            }
+        }
+        
+        [RelationshipSchemaName("lk_teambase_administratorid")]
+        public IEnumerable<Team> lk_teambase_administratorid {
+            get {
+                return GetRelatedEntities<Team>("lk_teambase_administratorid", null);
+            }
+            set {
+                SetRelatedEntities("lk_teambase_administratorid", null, value);
+            }
+        }
+        
+        [RelationshipSchemaName("lk_teambase_createdby")]
+        public IEnumerable<Team> lk_teambase_createdby {
+            get {
+                return GetRelatedEntities<Team>("lk_teambase_createdby", null);
+            }
+            set {
+                SetRelatedEntities("lk_teambase_createdby", null, value);
+            }
+        }
+        
+        [RelationshipSchemaName("lk_teambase_modifiedby")]
+        public IEnumerable<Team> lk_teambase_modifiedby {
+            get {
+                return GetRelatedEntities<Team>("lk_teambase_modifiedby", null);
+            }
+            set {
+                SetRelatedEntities("lk_teambase_modifiedby", null, value);
+            }
+        }
+        
         [RelationshipSchemaName("lk_userquery_createdby")]
         public IEnumerable<UserQuery> lk_userquery_createdby {
             get {
@@ -2688,6 +2296,16 @@ namespace Formula81.XrmToolBox.Shared.Xrm {
             }
         }
         
+        [RelationshipSchemaName("teammembership_association")]
+        public IEnumerable<Team> teammembership_association {
+            get {
+                return GetRelatedEntities<Team>("teammembership_association", null);
+            }
+            set {
+                SetRelatedEntities("teammembership_association", null, value);
+            }
+        }
+        
         [RelationshipSchemaName("user_userquery")]
         public IEnumerable<UserQuery> user_userquery {
             get {
@@ -2732,15 +2350,6 @@ namespace Formula81.XrmToolBox.Shared.Xrm {
         }
         
         /// <summary>
-        /// <para>Retrieves the record using the alternate key called 'UniqueEmployeeId'</para>
-        /// </summary>
-        public static SystemUser Retrieve_nrq_UniqueEmployeeId(IOrganizationService service, string EmployeeId, params Expression<Func<SystemUser,object>>[] attrs) {
-            KeyAttributeCollection keys = new KeyAttributeCollection();
-            keys.Add("employeeid", EmployeeId);
-            return Retrieve_AltKey(service, keys, attrs);
-        }
-        
-        /// <summary>
         /// <para>Set values for the alternate key called 'AAD ObjectId'</para>
         /// </summary>
         public void AltKey_aadobjectid(Guid AzureActiveDirectoryObjectId) {
@@ -2748,13 +2357,6 @@ namespace Formula81.XrmToolBox.Shared.Xrm {
             KeyAttributes.Add("azureactivedirectoryobjectid", AzureActiveDirectoryObjectId);
         }
         
-        /// <summary>
-        /// <para>Set values for the alternate key called 'UniqueEmployeeId'</para>
-        /// </summary>
-        public void AltKey_nrq_UniqueEmployeeId(string EmployeeId) {
-            KeyAttributes.Clear();
-            KeyAttributes.Add("employeeid", EmployeeId);
-        }
     }
     
     [DataContract()]
@@ -3057,51 +2659,4 @@ namespace Formula81.XrmToolBox.Shared.Xrm {
         NonLicensed = 4,
     }
     
-    [DataContract()]
-    public enum SystemUser_msdyn_AgentType {
-        
-        [EnumMember()]
-        [OptionSetMetadata("Application user", Index=0, Lcid=1033, Color="#0000ff")]
-        Applicationuser = 192350000,
-        
-        [EnumMember()]
-        [OptionSetMetadata("Bot application user", Index=1, Lcid=1033, Color="#0000ff")]
-        Botapplicationuser = 192350001,
-    }
-    
-    [DataContract()]
-    public enum SystemUser_msdyn_BotProvider {
-        
-        [EnumMember()]
-        [OptionSetMetadata("Virtual Agent", Index=0, Lcid=1033, Description="CCI first party Bot", Color="#0000ff")]
-        VirtualAgent = 192350000,
-        
-        [EnumMember()]
-        [OptionSetMetadata("Other", Index=1, Lcid=1033, Description="Other type of bot", Color="#0000ff")]
-        Other = 192350001,
-        
-        [EnumMember()]
-        [OptionSetMetadata("None", Index=2, Lcid=1033, Description="Indicates that the user is not a bot", Color="#0000ff")]
-        None = 192350002,
-    }
-    
-    [DataContract()]
-    public enum SystemUser_msdyn_BotType {
-        
-        [EnumMember()]
-        [OptionSetMetadata("Microsoft Copilot Studio", Index=0, Lcid=1033, Color="#0000ff")]
-        MicrosoftCopilotStudio = 192350001,
-    }
-    
-    [DataContract()]
-    public enum SystemUser_msdyn_UserType {
-        
-        [EnumMember()]
-        [OptionSetMetadata("CRM User", Index=0, Lcid=1033, Color="#0000ff")]
-        CRMUser = 192350000,
-        
-        [EnumMember()]
-        [OptionSetMetadata("BOT User", Index=1, Lcid=1033, Color="#0000ff")]
-        BOTUser = 192350001,
-    }
 }

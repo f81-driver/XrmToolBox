@@ -12,6 +12,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Audit.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Caches\EntityIconCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ColumnNames\Audit.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ColumnNames\SavedQuery.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ColumnNames\SystemUser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ColumnNames\Team.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ColumnNames\UserQuery.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ColumnNames\WebResource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\AuditEx.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\Metadata\AttributeMetadataEx.cs" />
@@ -20,7 +24,13 @@
     <Compile Include="$(MSBuildThisFileDirectory)GlobalOptionSets.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\XrmHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Resources\XrmResourceRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SavedQuery.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SystemUser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Team.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TeamMembership.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UserQuery.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WebResource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XrmContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XrmExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XrmToolkit.cs" />
   </ItemGroup>

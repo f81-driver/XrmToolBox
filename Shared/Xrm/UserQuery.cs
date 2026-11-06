@@ -498,6 +498,17 @@ namespace Formula81.XrmToolBox.Shared.Xrm {
             }
         }
         
+        [AttributeLogicalName("owningteam")]
+        [RelationshipSchemaName("team_userquery")]
+        public Team team_userquery {
+            get {
+                return GetRelatedEntity<Team>("team_userquery", null);
+            }
+            set {
+                SetRelatedEntity("team_userquery", null, value);
+            }
+        }
+        
         [AttributeLogicalName("owninguser")]
         [RelationshipSchemaName("user_userquery")]
         public SystemUser user_userquery {

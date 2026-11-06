@@ -19,7 +19,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Mocks
             _auditEntityCollection = new List<AuditEntity>
             {
                 new AuditEntity(1, "account", "Account", true, null, false/*, null, null*/),
-                new AuditEntity(10000, "nrq_serviceorder", "Service Order", true, null, true/*, null, null*/),
+                new AuditEntity(10000, "new_serviceorder", "Service Order", true, null, true/*, null, null*/),
                 new AuditEntity(20000, "msdyn_workorder", "Work Order", true, accountIconData, false/*, null, null*/)
             }.AsReadOnly();
         }

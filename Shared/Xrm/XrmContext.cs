@@ -47,6 +47,18 @@ namespace Formula81.XrmToolBox.Shared.Xrm {
             }
         }
         
+        public IQueryable<Team> TeamSet {
+            get {
+                return CreateQuery<Team>();
+            }
+        }
+        
+        public IQueryable<TeamMembership> TeamMembershipSet {
+            get {
+                return CreateQuery<TeamMembership>();
+            }
+        }
+        
         public IQueryable<UserQuery> UserQuerySet {
             get {
                 return CreateQuery<UserQuery>();

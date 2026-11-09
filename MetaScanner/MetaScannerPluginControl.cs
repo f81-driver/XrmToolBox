@@ -80,7 +80,8 @@ namespace Formula81.XrmToolBox.Tools.MetaScanner
         internal void LoadEntitiesAsync()
         {
             const string message = "Loading Tables";
-            var selectedLogicalName = _metaScannerView.EntityListViewModel.SelectedEntity?.LogicalName;
+            // On a refresh the table selected now, on opening the one selected last time
+            var selectedLogicalName = _metaScannerView.EntityListViewModel.SelectedEntity?.LogicalName ?? Settings.SelectedEntity;
             var loadGeneration = _loadGeneration;
             BeginBusy();
             WorkAsync(new WorkAsyncInfo
@@ -132,6 +133,9 @@ namespace Formula81.XrmToolBox.Tools.MetaScanner
         internal void ShowEntityDetail(MetaEntity metaEntity, string attributeLogicalName)
         {
             const string message = "Loading Table Metadata";
+            // Selected again the next time the tool opens on this connection
+            Settings.SelectedEntity = metaEntity.LogicalName;
+            SaveSettings();
             _metaScannerView.ScanViewModel.IsActive = false;
             var entityDetailViewModel = _metaScannerView.EntityDetailViewModel;
             var requestId = ++_entityDetailRequestId;

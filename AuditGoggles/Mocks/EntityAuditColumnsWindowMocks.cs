@@ -14,7 +14,7 @@ namespace Formula81.XrmToolBox.Tools.AuditGoggles.Mocks
             _entityAuditColumnsItemCollection = new List<EntityAuditColumnsItem>
             {
                 new EntityAuditColumnsItem("account", "Account", new List<EntityAuditColumnsItemColumn>{ new EntityAuditColumnsItemColumn("name", "Name") { IsChecked = true} }),
-                new EntityAuditColumnsItem("nrq_serviceorder", "Service Order", new List<EntityAuditColumnsItemColumn>{ new EntityAuditColumnsItemColumn("name", "Name") { IsChecked = true} })
+                new EntityAuditColumnsItem("new_serviceorder", "Service Order", new List<EntityAuditColumnsItemColumn>{ new EntityAuditColumnsItemColumn("name", "Name") { IsChecked = true} })
             }.AsReadOnly();
         }
 

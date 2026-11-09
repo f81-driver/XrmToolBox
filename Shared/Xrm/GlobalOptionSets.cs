@@ -11,6 +11,7 @@
 using Microsoft.Xrm.Sdk.Client;
 using System.Runtime.Serialization;
 
+// Commented out: XrmToolBox warns about it and it can change how other tools deserialize entities
 //[assembly: ProxyTypesAssembly()]
 
 
@@ -36,4 +37,5 @@ namespace Formula81.XrmToolBox.Shared.Xrm {
         [OptionSetMetadata("Deleted Unpublished", Index=3, Lcid=1033)]
         DeletedUnpublished = 3,
     }
+    
 }

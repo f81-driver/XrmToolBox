@@ -16,7 +16,7 @@ namespace Formula81.XrmToolBox.Tools.MetaScanner.Mocks
             {
                 new MetaEntity(1, Guid.NewGuid(), "account", "Account", "Account", "Business that represents a customer", false, true, false, false, true, null, true),
                 new MetaEntity(2, Guid.NewGuid(), "contact", "Contact", "Contact", "Person with whom a business unit has a relationship", false, true, false, false, true, null, false),
-                new MetaEntity(10000, Guid.NewGuid(), "nrq_serviceorder", "Service Order", "nrq_ServiceOrder", null, true, false, false, false, false, null, false)
+                new MetaEntity(10000, Guid.NewGuid(), "new_serviceorder", "Service Order", "new_ServiceOrder", null, true, false, false, false, false, null, false)
             }.AsReadOnly();
         }
 

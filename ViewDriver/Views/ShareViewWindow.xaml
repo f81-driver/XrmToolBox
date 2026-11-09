@@ -1,0 +1,143 @@
+<Window x:Class="Formula81.XrmToolBox.Tools.ViewDriver.Views.ShareViewWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Share View" Height="520" Width="860" MinHeight="380" MinWidth="680"
+        ShowInTaskbar="False"
+        FocusManager.FocusedElement="{Binding ElementName=SearchTextBox}">
+    <Window.Resources>
+        <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+        <Style x:Key="RightCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </Window.Resources>
+    <DockPanel Margin="10">
+        <DockPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button x:Name="OkButton" Content="Save sharing" Width="110" IsDefault="True" Click="OkButton_Click" />
+                <Button Content="Cancel" Width="100" Margin="6,0,0,0" IsCancel="True" />
+            </StackPanel>
+            <TextBlock x:Name="HintTextBlock" Foreground="DimGray" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,10,0" />
+        </DockPanel>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="280" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Users and teams to add -->
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource FieldLabelStyle}" Text="Users and teams" />
+                <TextBox x:Name="SearchTextBox" DockPanel.Dock="Top" Padding="2" Margin="0,0,0,4" TextChanged="SearchTextBox_TextChanged"
+                         ToolTip="Type to search on name" />
+                <TextBlock DockPanel.Dock="Bottom" Margin="0,4,0,0" Foreground="DimGray" TextWrapping="Wrap"
+                           Text="Select one or more (Ctrl or Shift click), then Add. Double-click adds one." />
+                <ListBox x:Name="PrincipalsListBox" SelectionMode="Extended" MouseDoubleClick="PrincipalsListBox_MouseDoubleClick"
+                         HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         SelectionChanged="PrincipalsListBox_SelectionChanged">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <DockPanel ToolTip="{Binding ToolTip}">
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding KindText}" Foreground="DimGray" Margin="8,0,0,0" />
+                                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                            </DockPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0">
+                <Button x:Name="AddButton" Content="Add →" Width="80" Click="AddButton_Click" ToolTip="Share the view with the selected users and teams" />
+            </StackPanel>
+
+            <!-- Shares -->
+            <DockPanel Grid.Column="2">
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource FieldLabelStyle}" Text="Shared with" />
+                <Grid>
+                    <DataGrid x:Name="SharesDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                              HeadersVisibility="Column" SelectionMode="Single" GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="#E0E0E0" Background="White">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="User or team" Width="*" IsReadOnly="True" SortMemberPath="Principal.Name">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <DockPanel Margin="4,2" ToolTip="{Binding Principal.ToolTip}">
+                                            <TextBlock DockPanel.Dock="Right" Text="new" Foreground="#9A4D00" FontStyle="Italic" Margin="6,0,0,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsNew}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding Principal.Name}" TextTrimming="CharacterEllipsis" />
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Kind" Binding="{Binding Principal.KindText}" IsReadOnly="True" Width="50" />
+                            <DataGridTemplateColumn Header="Read" Width="50">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox Style="{StaticResource RightCheckBoxStyle}" IsChecked="{Binding CanRead, UpdateSourceTrigger=PropertyChanged}"
+                                                  ToolTip="See and use the view; unchecking it removes all access" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Write" Width="50">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox Style="{StaticResource RightCheckBoxStyle}" IsChecked="{Binding CanWrite, UpdateSourceTrigger=PropertyChanged}"
+                                                  ToolTip="Change the view" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Delete" Width="50">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox Style="{StaticResource RightCheckBoxStyle}" IsChecked="{Binding CanDelete, UpdateSourceTrigger=PropertyChanged}"
+                                                  ToolTip="Delete the view" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Share" Width="50">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox Style="{StaticResource RightCheckBoxStyle}" IsChecked="{Binding CanShare, UpdateSourceTrigger=PropertyChanged}"
+                                                  ToolTip="Share the view with others" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Assign" Width="50">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox Style="{StaticResource RightCheckBoxStyle}" IsChecked="{Binding CanAssign, UpdateSourceTrigger=PropertyChanged}"
+                                                  ToolTip="Give the view to another owner" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="30">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="✕" Width="22" Height="20" Padding="0" Click="RemoveButton_Click"
+                                                ToolTip="Stop sharing the view with this user or team" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock x:Name="EmptyTextBlock" Margin="8,32,8,8" Foreground="DimGray" FontStyle="Italic" TextWrapping="Wrap" IsHitTestVisible="False"
+                               Text="The view is not shared yet. Add users or teams from the left." />
+                </Grid>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+</Window>

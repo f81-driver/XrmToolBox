@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuditGoggles", "AuditGoggle
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaScanner", "MetaScanner\MetaScanner.csproj", "{B3463539-271D-40FE-919C-FA35C37D3952}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ViewDriver", "ViewDriver\ViewDriver.csproj", "{A0BE2281-4284-414E-84AE-932914C72082}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{B3463539-271D-40FE-919C-FA35C37D3952}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B3463539-271D-40FE-919C-FA35C37D3952}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B3463539-271D-40FE-919C-FA35C37D3952}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0BE2281-4284-414E-84AE-932914C72082}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0BE2281-4284-414E-84AE-932914C72082}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0BE2281-4284-414E-84AE-932914C72082}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0BE2281-4284-414E-84AE-932914C72082}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -63,5 +69,10 @@ Global
 		Shared\Parts\Parts.projitems*{b3463539-271d-40fe-919c-fa35c37d3952}*SharedItemsImports = 4
 		Shared\XrmParts\XrmParts.projitems*{b3463539-271d-40fe-919c-fa35c37d3952}*SharedItemsImports = 4
 		Shared\Xrm\Xrm.projitems*{b3463539-271d-40fe-919c-fa35c37d3952}*SharedItemsImports = 4
+		Shared\Core\Core.projitems*{a0be2281-4284-414e-84ae-932914c72082}*SharedItemsImports = 4
+		Shared\Json\Json.projitems*{a0be2281-4284-414e-84ae-932914c72082}*SharedItemsImports = 4
+		Shared\Parts\Parts.projitems*{a0be2281-4284-414e-84ae-932914c72082}*SharedItemsImports = 4
+		Shared\XrmParts\XrmParts.projitems*{a0be2281-4284-414e-84ae-932914c72082}*SharedItemsImports = 4
+		Shared\Xrm\Xrm.projitems*{a0be2281-4284-414e-84ae-932914c72082}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal
